@@ -1,10 +1,17 @@
-from typing import Dict, Any
+from __future__ import annotations
 
+import json
+import logging
+from typing import Any
+
+from app.catalog import find_service_by_rule
 from app.config import settings
+from app.exceptions import ModelResponseError
+from app.llm_schemas import SERVICE_RECOMMEND_JSON_SCHEMA
 from app.model import model_instance
 from app.prompts import SERVICE_RECOMMEND_SYSTEM_PROMPT
-from app.exceptions import ModelResponseError
 
+logger = logging.getLogger(__name__)
 
 ALLOWED_INTENTS = {
     "issue_document",
@@ -26,122 +33,53 @@ ALLOWED_SERVICE_IDS = {
 }
 
 
-def _normalize_text(text: str) -> str:
-    return text.strip().lower()
+def _clamp_confidence(value: Any) -> float:
+    try:
+        confidence = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(1.0, confidence))
 
 
-def _rule_based_service_match(text: str) -> Dict[str, Any] | None:
-    t = _normalize_text(text)
-    print("[DEBUG] normalized text:", t)
+def _rule_based_response(text: str) -> dict[str, Any] | None:
+    item = find_service_by_rule(text)
+    if item is None:
+        return None
 
-    # 주민등록등본
-    if any(keyword in t for keyword in ["주민등록등본", "등본", "등본 발급", "초본"]):
-        print("[DEBUG] rule matched: RESIDENT_REGISTRATION_COPY")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "issue_document",
-            "serviceId": "RESIDENT_REGISTRATION_COPY",
-            "confidence": 0.99,
-            "answer": "주민등록등본 발급 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"issue_document","serviceId":"RESIDENT_REGISTRATION_COPY","confidence":0.99,"answer":"주민등록등본 발급 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    # 가족관계증명서
-    if "가족관계증명서" in t:
-        print("[DEBUG] rule matched: FAMILY_CERTIFICATE")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "issue_document",
-            "serviceId": "FAMILY_CERTIFICATE",
-            "confidence": 0.99,
-            "answer": "가족관계증명서 발급 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"issue_document","serviceId":"FAMILY_CERTIFICATE","confidence":0.99,"answer":"가족관계증명서 발급 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    # 전입신고
-    if any(keyword in t for keyword in ["전입신고", "이사 와서 신고", "주소 이전", "주소이전"]):
-        print("[DEBUG] rule matched: MOVE_IN_REPORT")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "submit_application",
-            "serviceId": "MOVE_IN_REPORT",
-            "confidence": 0.99,
-            "answer": "전입신고 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"submit_application","serviceId":"MOVE_IN_REPORT","confidence":0.99,"answer":"전입신고 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    # 건강보험
-    if any(keyword in t for keyword in ["건강보험", "건강보험료", "보험료 확인서"]):
-        print("[DEBUG] rule matched: HEALTH_INSURANCE")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "pay_or_check",
-            "serviceId": "HEALTH_INSURANCE",
-            "confidence": 0.99,
-            "answer": "건강보험 관련 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"pay_or_check","serviceId":"HEALTH_INSURANCE","confidence":0.99,"answer":"건강보험 관련 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    # 혼인관계증명서
-    if "혼인관계증명서" in t:
-        print("[DEBUG] rule matched: MARRIAGE_CERTIFICATE")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "issue_document",
-            "serviceId": "MARRIAGE_CERTIFICATE",
-            "confidence": 0.99,
-            "answer": "혼인관계증명서 발급 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"issue_document","serviceId":"MARRIAGE_CERTIFICATE","confidence":0.99,"answer":"혼인관계증명서 발급 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    # 세금
-    if any(keyword in t for keyword in ["세금", "납세", "세금 납부 확인서", "납세 확인서"]):
-        print("[DEBUG] rule matched: TAX_CERTIFICATE")
-        return {
-            "task": "recommend_service",
-            "success": True,
-            "fallback_used": False,
-            "intent": "pay_or_check",
-            "serviceId": "TAX_CERTIFICATE",
-            "confidence": 0.99,
-            "answer": "세금 납부 확인 메뉴로 안내할게요.",
-            "raw_text": '{"intent":"pay_or_check","serviceId":"TAX_CERTIFICATE","confidence":0.99,"answer":"세금 납부 확인 메뉴로 안내할게요."}',
-            "model_name": "rule_based",
-        }
-
-    return None
+    raw = {
+        "intent": item.intent,
+        "serviceId": item.service_id,
+        "confidence": 0.99,
+        "answer": item.answer,
+    }
+    return {
+        "task": "recommend_service",
+        "success": True,
+        "fallback_used": False,
+        "intent": item.intent,
+        "serviceId": item.service_id,
+        "confidence": 0.99,
+        "answer": item.answer,
+        "source": "rule_based",
+        "raw_text": json.dumps(raw, ensure_ascii=False),
+        "model_name": "rule_based",
+    }
 
 
-def recommend_service(text: str) -> Dict[str, Any]:
-    print("[DEBUG] recommend_service called with:", text)
-
-    # 1. 규칙 기반 먼저 처리
-    rule_result = _rule_based_service_match(text)
+def recommend_service(text: str) -> dict[str, Any]:
+    rule_result = _rule_based_response(text)
     if rule_result is not None:
-        print("[DEBUG] returning rule-based result")
+        if settings.DEBUG_LOGS:
+            logger.debug("service rule matched: %s", rule_result["serviceId"])
         return rule_result
 
-    # 2. 규칙에 안 걸리면 LLM 사용
-    print("[DEBUG] falling back to LLM")
-
     try:
-        result = model_instance.generate_json(SERVICE_RECOMMEND_SYSTEM_PROMPT, text)
-        parsed = result["parsed"]
+        result = model_instance.generate_json(
+            SERVICE_RECOMMEND_SYSTEM_PROMPT,
+            text,
+            SERVICE_RECOMMEND_JSON_SCHEMA,
+        )
+        parsed = result.parsed
 
         intent = parsed.get("intent", "unknown")
         if intent not in ALLOWED_INTENTS:
@@ -151,21 +89,14 @@ def recommend_service(text: str) -> Dict[str, Any]:
         if service_id not in ALLOWED_SERVICE_IDS:
             service_id = "UNKNOWN"
 
-        confidence = parsed.get("confidence", 0.0)
-        try:
-            confidence = float(confidence)
-        except Exception:
-            confidence = 0.0
-
-        confidence = max(0.0, min(1.0, confidence))
-
+        confidence = _clamp_confidence(parsed.get("confidence", 0.0))
         if confidence < settings.SERVICE_CONFIDENCE_THRESHOLD:
             intent = "unknown"
             service_id = "UNKNOWN"
 
-        answer = parsed.get("answer", "적절한 서비스를 찾지 못했습니다.")
-        if not isinstance(answer, str):
-            answer = "적절한 서비스를 찾지 못했습니다."
+        answer = parsed.get("answer")
+        if not isinstance(answer, str) or not answer.strip():
+            answer = "적절한 서비스를 찾지 못했습니다. 다시 말씀해 주세요."
 
         return {
             "task": "recommend_service",
@@ -174,12 +105,14 @@ def recommend_service(text: str) -> Dict[str, Any]:
             "intent": intent,
             "serviceId": service_id,
             "confidence": confidence,
-            "answer": answer,
-            "raw_text": result["raw_text"],
-            "model_name": result["model_name"],
+            "answer": answer.strip(),
+            "source": "llm",
+            "raw_text": result.raw_text,
+            "model_name": result.model_name,
         }
 
-    except ModelResponseError as e:
+    except ModelResponseError as exc:
+        logger.warning("service recommendation fallback: %s", exc)
         return {
             "task": "recommend_service",
             "success": False,
@@ -187,7 +120,8 @@ def recommend_service(text: str) -> Dict[str, Any]:
             "intent": "unknown",
             "serviceId": "UNKNOWN",
             "confidence": 0.0,
-            "answer": f"서비스 추천에 실패했습니다: {str(e)}",
+            "answer": "서비스를 정확히 찾지 못했습니다. 다시 말씀해 주세요.",
+            "source": "fallback",
             "raw_text": "",
             "model_name": model_instance.model_id,
         }
