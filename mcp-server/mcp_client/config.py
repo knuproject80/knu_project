@@ -31,6 +31,14 @@ IDLE_WARNING_SEC = 45
 AI_SERVER_BASE_URL = "http://127.0.0.1:8000"
 AI_SERVER_TIMEOUT_SEC = 5
 
+# VOICE_GUIDE 관련
+VOICE_GUIDE_ENABLED = True          # MCP 서버 미연결 시 False로 끄기 용도
+VOICE_GUIDE_FALLBACK = True         # MCP 실패 시 로컬 문구 사용 여부
+
+# MCP 재시도 설정 (현재 mcp_client.py에 하드코딩 max_retries=2)
+MCP_MAX_RETRIES = 2
+MCP_RETRY_DELAY_SEC = 1
+
 # 사용자 유형별 자동 UI 설정 데이터
 USER_CONFIGS = {
     "ELDERLY": {
