@@ -46,6 +46,82 @@ GUIDE_TEXT = {
         "ELDERLY":     "이용해 주셔서 감사합니다. 안녕히 가세요.",
         "WHEELCHAIR":  "이용해 주셔서 감사합니다. 안녕히 가세요.",
     },
+
+    # ── 주민등록등본 발급 (serviceId: 102) ──────────────────
+    "CERTIFICATE_SELECT_PURPOSE": {
+        "NORMAL":     "등본 용도를 선택해 주세요.",
+        "ELDERLY":    "등본을 어디에 쓰실 건지 선택해 주세요. 천천히 골라 주세요.",
+        "WHEELCHAIR": "등본 용도를 선택해 주세요.",
+    },
+    "CERTIFICATE_SELECT_COUNT": {
+        "NORMAL":     "발급 매수를 선택해 주세요.",
+        "ELDERLY":    "몇 장 필요하신지 선택해 주세요.",
+        "WHEELCHAIR": "발급 매수를 선택해 주세요.",
+    },
+    "CERTIFICATE_SELECT_SCOPE": {
+        "NORMAL":     "주민등록번호 공개 범위를 선택해 주세요.",
+        "ELDERLY":    "주민등록번호를 어디까지 보여줄지 선택해 주세요.",
+        "WHEELCHAIR": "주민등록번호 공개 범위를 선택해 주세요.",
+    },
+    "CERTIFICATE_CONFIRM": {
+        "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
+        "ELDERLY":    "내용을 천천히 확인해 주세요. 맞으시면 발급 버튼을 눌러 주세요.",
+        "WHEELCHAIR": "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
+    },
+    "CERTIFICATE_PRINTING": {
+        "NORMAL":     "출력 중입니다. 잠시 기다려 주세요.",
+        "ELDERLY":    "출력 중입니다. 잠깐만 기다려 주세요.",
+        "WHEELCHAIR": "출력 중입니다. 서류가 아래 출력구에서 나옵니다.",
+    },
+    "CERTIFICATE_COMPLETE": {
+        "NORMAL":     "등본 출력이 완료되었습니다. 서류를 가져가 주세요.",
+        "ELDERLY":    "등본이 나왔습니다. 서류를 꼭 챙겨 가세요.",
+        "WHEELCHAIR": "등본 출력이 완료되었습니다. 아래 출력구에서 서류를 가져가 주세요.",
+    },
+
+    # ── 전입신고 (serviceId: 101) ────────────────────────────
+    "MOVEIN_INPUT_PREV_ADDRESS": {
+        "NORMAL":     "이전 주소를 입력해 주세요.",
+        "ELDERLY":    "이사 오시기 전 살던 주소를 입력해 주세요.",
+        "WHEELCHAIR": "이전 주소를 입력해 주세요.",
+    },
+    "MOVEIN_INPUT_NEW_ADDRESS": {
+        "NORMAL":     "새로운 주소를 입력해 주세요.",
+        "ELDERLY":    "이사 오신 새 주소를 입력해 주세요.",
+        "WHEELCHAIR": "새로운 주소를 입력해 주세요.",
+    },
+    "MOVEIN_SELECT_DATE": {
+        "NORMAL":     "전입일을 선택해 주세요.",
+        "ELDERLY":    "이사 오신 날짜를 선택해 주세요.",
+        "WHEELCHAIR": "전입일을 선택해 주세요.",
+    },
+    "MOVEIN_INPUT_MEMBERS": {
+        "NORMAL":     "전입 세대원 정보를 입력해 주세요.",
+        "ELDERLY":    "함께 이사 오신 가족이 있으면 입력해 주세요.",
+        "WHEELCHAIR": "전입 세대원 정보를 입력해 주세요.",
+    },
+    "MOVEIN_CONFIRM": {
+        "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 신고 버튼을 눌러 주세요.",
+        "ELDERLY":    "내용을 천천히 확인해 주세요. 맞으시면 신고 버튼을 눌러 주세요.",
+        "WHEELCHAIR": "입력하신 내용을 확인해 주세요. 맞으면 신고 버튼을 눌러 주세요.",
+    },
+    "MOVEIN_COMPLETE": {
+        "NORMAL":     "전입신고가 완료되었습니다.",
+        "ELDERLY":    "전입신고가 완료되었습니다. 고생하셨습니다.",
+        "WHEELCHAIR": "전입신고가 완료되었습니다.",
+    },
+
+    # ── 공통 오류 ────────────────────────────────────────────
+    "ERROR_RETRY": {
+        "NORMAL":     "오류가 발생했습니다. 다시 시도해 주세요.",
+        "ELDERLY":    "잠깐 문제가 생겼습니다. 다시 한번 눌러 주세요.",
+        "WHEELCHAIR": "오류가 발생했습니다. 다시 시도해 주세요.",
+    },
+    "ERROR_TIMEOUT": {
+        "NORMAL":     "시간이 초과되었습니다. 처음 화면으로 돌아갑니다.",
+        "ELDERLY":    "시간이 지났습니다. 처음 화면으로 돌아갑니다. 천천히 다시 시작해 주세요.",
+        "WHEELCHAIR": "시간이 초과되었습니다. 처음 화면으로 돌아갑니다.",
+    },
 }
 
 
@@ -85,7 +161,7 @@ class KioskMainController:
         self.ui.register_handler("UI_ACK", self._on_ui_ack)
         self.ui.register_handler("USER_CANCEL", self._on_user_cancel)
         self.ui.register_handler("VOICE_INPUT", self._on_voice_input)
-
+        self.ui.register_handler("STEP_CHANGE", self._on_step_change)
         self.sessions.set_timeout_callback(self._on_session_timeout)
 
     # ── 생명주기 ────────────────────────────────
@@ -409,7 +485,27 @@ class KioskMainController:
             )
         else:
             logger.error("VOICE_INPUT 수신 시 asyncio 루프 없음 — 처리 불가")
+    # 핸들러 구현
+    def _on_step_change(self, payload: dict):
+        data = payload.get("data", {})
+        session_id = data.get("sessionId")
+        step = data.get("step")
+    
+        if not step or not session_id:
+            return
 
+        self.sessions.touch(session_id)  # 활동 시각 갱신
+
+        if self._loop:
+            self._loop.call_soon_threadsafe(
+                lambda: self._loop.create_task(
+                    self._send_voice_guide(
+                        session_id=session_id,
+                        context=step,        # GUIDE_TEXT 키로 바로 사용
+                        user_type=self.current_user_type,
+                    )
+                )
+            )
     def _on_user_touch(self, payload: dict):
         session_id = payload.get("data", {}).get("sessionId")
         if session_id:
