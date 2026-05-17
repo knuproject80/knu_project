@@ -1,9 +1,14 @@
 package com.kiosk.controller;
 
+import com.kiosk.dto.request.ApplicationCreateRequest;
+import com.kiosk.dto.response.ApiResponse;
 import com.kiosk.entity.CivilApplication;
 import com.kiosk.entity.ServiceItem;
 import com.kiosk.repository.CivilApplicationRepository;
 import com.kiosk.repository.ServiceItemRepository;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,13 +17,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/api")
 public class ServiceController {
 
+    private static final Logger log = LoggerFactory.getLogger(ServiceController.class);
+
     private final ServiceItemRepository serviceItemRepository;
     private final CivilApplicationRepository applicationRepository;
+
+    /** 접수번호 순번 — AtomicInteger 로 동시 요청 시 충돌 방지 */
+    private final AtomicInteger applicationSeq = new AtomicInteger(1);
 
     public ServiceController(ServiceItemRepository serviceItemRepository,
                              CivilApplicationRepository applicationRepository) {
@@ -27,85 +38,87 @@ public class ServiceController {
     }
 
     // GET /api/services
-    // 키오스크에서 이용 가능한 전체 서비스 목록 조회
     @GetMapping("/services")
-    public ResponseEntity<List<ServiceItem>> getAllServices() {
-        return ResponseEntity.ok(
-            serviceItemRepository.findByIsAvailableTrueOrderBySortOrder()
-        );
+    public ResponseEntity<ApiResponse<List<ServiceItem>>> getAllServices() {
+        List<ServiceItem> services =
+                serviceItemRepository.findByIsAvailableTrueOrderBySortOrder();
+        return ResponseEntity.ok(ApiResponse.ok(services));
     }
 
     // GET /api/services/category/{categoryId}
-    // 카테고리별 서비스 목록 조회
-    // 1: 증명서발급, 2: 민원신청, 3: 세금/납부, 4: 복지서비스
     @GetMapping("/services/category/{categoryId}")
-    public ResponseEntity<List<ServiceItem>> getServicesByCategory(
+    public ResponseEntity<ApiResponse<List<ServiceItem>>> getServicesByCategory(
             @PathVariable Long categoryId) {
-        return ResponseEntity.ok(
-            serviceItemRepository.findByCategoryIdOrderBySortOrder(categoryId)
-        );
+        List<ServiceItem> services =
+                serviceItemRepository.findByCategoryIdOrderBySortOrder(categoryId);
+        return ResponseEntity.ok(ApiResponse.ok(services));
     }
 
     // POST /api/applications
-    // 민원 신청 접수
     @PostMapping("/applications")
-    public ResponseEntity<Map<String, Object>> createApplication(
-            @RequestBody Map<String, Object> request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createApplication(
+            @Valid @RequestBody ApplicationCreateRequest request) {
 
         String today = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String applicationNo = "CIV-" + today + "-"
-                + String.format("%03d", (int)(Math.random() * 999 + 1));
 
-        CivilApplication application = CivilApplication.builder()
-                .applicationNo(applicationNo)
-                .sessionId((String) request.get("sessionId"))
-                .serviceItemId(Long.valueOf(request.get("serviceItemId").toString()))
-                .applicantName((String) request.get("applicantName"))
-                .copies(request.get("copies") != null
-                        ? (Integer) request.get("copies") : 1)
-                .purpose((String) request.get("purpose"))
-                .feePaid(request.get("feePaid") != null
-                        ? (Integer) request.get("feePaid") : 0)
-                .build();
+        // 최대 3번 재시도 (unique 충돌 대비)
+        CivilApplication saved = null;
+        String applicationNo = null;
+        for (int attempt = 0; attempt < 3; attempt++) {
+            applicationNo = "CIV-" + today + "-"
+                    + String.format("%04d", applicationSeq.getAndIncrement());
 
-        applicationRepository.save(application);
+            CivilApplication application = CivilApplication.builder()
+                    .applicationNo(applicationNo)
+                    .sessionId(request.getSessionId())
+                    .serviceItemId(request.getServiceItemId())
+                    .applicantName(request.getApplicantName())
+                    .copies(request.getCopies() != null ? request.getCopies() : 1)
+                    .purpose(request.getPurpose())
+                    .feePaid(request.getFeePaid() != null ? request.getFeePaid() : 0)
+                    .build();
+            try {
+                saved = applicationRepository.save(application);
+                break;
+            } catch (Exception e) {
+                log.warn("접수번호 충돌 재시도 {}/3: {}", attempt + 1, applicationNo);
+                if (attempt == 2) throw e;
+            }
+        }
+
+        log.info("민원 접수: applicationNo={}, sessionId={}", applicationNo, request.getSessionId());
 
         Map<String, Object> result = new HashMap<>();
-        result.put("success",       true);
         result.put("applicationNo", applicationNo);
-        result.put("message",       "민원이 정상적으로 접수되었습니다");
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(ApiResponse.ok("민원이 정상적으로 접수되었습니다", result));
     }
 
     // GET /api/applications/{applicationNo}
-    // 접수번호로 민원 처리 현황 조회
     @GetMapping("/applications/{applicationNo}")
-    public ResponseEntity<Map<String, Object>> getApplication(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getApplication(
             @PathVariable String applicationNo) {
 
         return applicationRepository.findByApplicationNo(applicationNo)
                 .map(app -> {
                     Map<String, Object> result = new HashMap<>();
                     result.put("applicationNo", app.getApplicationNo());
-                    result.put("status",        app.getStatus());
-                    result.put("copies",        app.getCopies());
-                    result.put("purpose",
-                            app.getPurpose() != null ? app.getPurpose() : "");
-                    result.put("feePaid",       app.getFeePaid());
-                    result.put("createdAt",     app.getCreatedAt().toString());
-                    return ResponseEntity.ok(result);
+                    result.put("status", app.getStatus());
+                    result.put("copies", app.getCopies());
+                    result.put("purpose", app.getPurpose() != null ? app.getPurpose() : "");
+                    result.put("feePaid", app.getFeePaid());
+                    result.put("createdAt", app.getCreatedAt().toString());
+                    return ResponseEntity.ok(ApiResponse.ok(result));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.ok(
+                        ApiResponse.error("해당 접수번호를 찾을 수 없습니다: " + applicationNo)));
     }
 
     // GET /api/applications/session/{sessionId}
-    // 세션별 신청 목록 조회
     @GetMapping("/applications/session/{sessionId}")
-    public ResponseEntity<List<CivilApplication>> getApplicationsBySession(
+    public ResponseEntity<ApiResponse<List<CivilApplication>>> getApplicationsBySession(
             @PathVariable String sessionId) {
-        return ResponseEntity.ok(
-            applicationRepository.findBySessionId(sessionId)
-        );
+        List<CivilApplication> apps = applicationRepository.findBySessionId(sessionId);
+        return ResponseEntity.ok(ApiResponse.ok(apps));
     }
 }

@@ -19,6 +19,8 @@ public class CorsConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);
+        // WebSocket handshake 도 HTTP 이므로 CORS 필요
+        source.registerCorsConfiguration("/ws/**", config);
         return new CorsFilter(source);
     }
 }

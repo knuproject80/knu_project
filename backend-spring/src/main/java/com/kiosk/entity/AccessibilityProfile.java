@@ -34,7 +34,7 @@ public class AccessibilityProfile {
     private Boolean voiceGuide = false;
 
     @Column(name = "low_screen_mode")
-    private Boolean lowScreenMode = false;      // 휠체어용 낮은 화면
+    private Boolean lowScreenMode = false;
 
     @Column(name = "font_size")
     private Integer fontSize = 16;
@@ -57,12 +57,15 @@ public class AccessibilityProfile {
     }
 
     public enum UserType {
-        ELDERLY,            // 고령자 → 확대 + 고대비
-        WHEELCHAIR,         // 휠체어 → 낮은 화면 모드
-        NORMAL              // 일반
+        ELDERLY,              // 고령자  → 확대 + 고대비 + 단순모드 + 음성
+        WHEELCHAIR,           // 휠체어  → 낮은 화면 모드
+        VISUALLY_IMPAIRED,    // 시각장애 → 최대 확대 + 음성 안내
+        HEARING_IMPAIRED,     // 청각장애 → 고대비 + 자막 강화
+        NORMAL                // 일반
     }
 
-    // Getters
+    // ── Getters ──
+
     public Long getId() { return id; }
     public String getDeviceId() { return deviceId; }
     public String getSessionId() { return sessionId; }
@@ -73,19 +76,23 @@ public class AccessibilityProfile {
     public Boolean getVoiceGuide() { return voiceGuide; }
     public Boolean getLowScreenMode() { return lowScreenMode; }
     public Integer getFontSize() { return fontSize; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
-    // Setters
-    public void setDeviceId(String deviceId) { this.deviceId = deviceId; }
-    public void setSessionId(String sessionId) { this.sessionId = sessionId; }
-    public void setUserType(UserType userType) { this.userType = userType; }
-    public void setLargeFont(Boolean largeFont) { this.largeFont = largeFont; }
-    public void setHighContrast(Boolean highContrast) { this.highContrast = highContrast; }
-    public void setSimpleMode(Boolean simpleMode) { this.simpleMode = simpleMode; }
-    public void setVoiceGuide(Boolean voiceGuide) { this.voiceGuide = voiceGuide; }
-    public void setLowScreenMode(Boolean lowScreenMode) { this.lowScreenMode = lowScreenMode; }
-    public void setFontSize(Integer fontSize) { this.fontSize = fontSize; }
+    // ── Setters ──
 
-    // Builder
+    public void setDeviceId(String v) { this.deviceId = v; }
+    public void setSessionId(String v) { this.sessionId = v; }
+    public void setUserType(UserType v) { this.userType = v; }
+    public void setLargeFont(Boolean v) { this.largeFont = v; }
+    public void setHighContrast(Boolean v) { this.highContrast = v; }
+    public void setSimpleMode(Boolean v) { this.simpleMode = v; }
+    public void setVoiceGuide(Boolean v) { this.voiceGuide = v; }
+    public void setLowScreenMode(Boolean v) { this.lowScreenMode = v; }
+    public void setFontSize(Integer v) { this.fontSize = v; }
+
+    // ── Builder ──
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
