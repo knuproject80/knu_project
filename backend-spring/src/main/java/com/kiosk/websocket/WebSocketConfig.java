@@ -18,8 +18,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // SockJS fallback 지원
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
+
+        // 순수 WebSocket (MCP Client stomp_manager 등 non-SockJS 클라이언트용)
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*");
     }
 }

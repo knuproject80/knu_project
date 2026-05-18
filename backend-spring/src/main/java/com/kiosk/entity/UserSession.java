@@ -20,8 +20,16 @@ public class UserSession {
     @Column(name = "detected_type", length = 50)
     private String detectedType;
 
+    /** 현재 사용자가 보고 있는 페이지 (heartbeat 시 갱신) */
+    @Column(name = "current_page", length = 200)
+    private String currentPage;
+
     @Column(name = "started_at")
     private LocalDateTime startedAt;
+
+    /** 마지막 활동 시각 — heartbeat·로그·모드변경 시 갱신 */
+    @Column(name = "last_activity_at")
+    private LocalDateTime lastActivityAt;
 
     @Column(name = "ended_at")
     private LocalDateTime endedAt;
@@ -32,23 +40,43 @@ public class UserSession {
     @Column(name = "is_completed")
     private Boolean isCompleted = false;
 
+    /** 종료 사유: COMPLETED | CANCELLED | TIMEOUT | ERROR */
+    @Column(name = "end_reason", length = 50)
+    private String endReason;
+
     @PrePersist
     public void prePersist() {
-        this.startedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        this.startedAt = now;
+        this.lastActivityAt = now;
     }
 
-    // Getters
+    // ── Getters ──
+
+    public Long getId() { return id; }
     public String getSessionId() { return sessionId; }
     public String getDeviceId() { return deviceId; }
+    public String getDetectedType() { return detectedType; }
+    public String getCurrentPage() { return currentPage; }
     public LocalDateTime getStartedAt() { return startedAt; }
+    public LocalDateTime getLastActivityAt() { return lastActivityAt; }
+    public LocalDateTime getEndedAt() { return endedAt; }
+    public Integer getDurationSec() { return durationSec; }
     public Boolean getIsCompleted() { return isCompleted; }
+    public String getEndReason() { return endReason; }
 
-    // Setters
+    // ── Setters ──
+
+    public void setDetectedType(String v) { this.detectedType = v; }
+    public void setCurrentPage(String v) { this.currentPage = v; }
+    public void setLastActivityAt(LocalDateTime v) { this.lastActivityAt = v; }
     public void setEndedAt(LocalDateTime v) { this.endedAt = v; }
     public void setDurationSec(Integer v) { this.durationSec = v; }
     public void setIsCompleted(Boolean v) { this.isCompleted = v; }
+    public void setEndReason(String v) { this.endReason = v; }
 
-    // Builder
+    // ── Builder ──
+
     public static Builder builder() { return new Builder(); }
 
     public static class Builder {
@@ -56,6 +84,7 @@ public class UserSession {
         public Builder sessionId(String v) { s.sessionId = v; return this; }
         public Builder deviceId(String v) { s.deviceId = v; return this; }
         public Builder detectedType(String v) { s.detectedType = v; return this; }
+        public Builder currentPage(String v) { s.currentPage = v; return this; }
         public UserSession build() { return s; }
     }
 }
