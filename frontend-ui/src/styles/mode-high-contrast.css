@@ -2,6 +2,7 @@
 .screen-frame.high-contrast {
   --color-bg-app: #000000;
   --color-surface: #000000;
+  --color-blue: #ffff00;
   --color-light-blue: #000000;
   --color-line: #ffff00;
   --color-fill: #000000;
@@ -20,19 +21,30 @@
 .screen-frame.high-contrast .count-input,
 .screen-frame.high-contrast .summary-input,
 .screen-frame.high-contrast .small-count-box,
-.screen-frame.high-contrast .keypad-button,
+/*.screen-frame.high-contrast .keypad-button,*/
 .screen-frame.high-contrast .pill-button,
 .screen-frame.high-contrast .service-button,
 .screen-frame.high-contrast .large-choice-button {
   border-color: #ffff00;
 }
 
+.screen-frame.high-contrast .large-choice-button{
+   border-style: solid;
+  border-width: 6px;
+  box-shadow: none;
+}
 .screen-frame.high-contrast .service-button,
-.screen-frame.high-contrast .large-choice-button,
-.screen-frame.high-contrast .pill-button,
-.screen-frame.high-contrast .keypad-button {
+.screen-frame.high-contrast .pill-button
+/*.screen-frame.high-contrast .keypad-button */{
   border-style: solid;
   border-width: 3px;
+  box-shadow: none;
+}
+
+.screen-frame.high-contrast .keypad-button {
+  background: #d9d9d9;
+  color: #111111;
+  border: none;
   box-shadow: none;
 }
 
@@ -42,11 +54,11 @@
 }
 
 .screen-frame.high-contrast .category-label-box {
-  background: #ffff00;
+  background: transparent;
 }
 
 .screen-frame.high-contrast .category-title {
-  color: #000000;
+  color: #ffff00;
 }
 
 .screen-frame.high-contrast .step-circle {
@@ -63,4 +75,25 @@
 .screen-frame.high-contrast .status-message {
   background: #1a1a1a;
   color: #ffff00;
+}
+
+.screen-frame.high-contrast .large-choice-button:active {
+  background: #ffff00;
+  color: #000000;
+  border-color: #ffff00;
+}
+
+.screen-frame.high-contrast .large-choice-button.selected {
+  background: #ffff00;
+  color: #000000;
+}
+
+.screen-frame.high-contrast .service-button:active {
+  background: #ffff00;
+  color: #000000;
+}
+
+.screen-frame.high-contrast .accessibility-button.active-accessibility {
+  background: #ffff00;
+  color: #000000;
 }

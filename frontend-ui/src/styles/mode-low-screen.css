@@ -1,22 +1,268 @@
-/* 낮은 화면 모드: 화면 배치/간격 전담 */
+/* 낮은 화면 모드: 타이틀 1/3 고정 + 내부 압축 + 재배열 */
 .screen-frame.low-screen {
-  --screen-justify: flex-end;
-  --space-screen-padding: 36px;
-  --space-section-gap: 34px;
-  --space-row-gap: 16px;
-  --space-content-left: 24px;
-  --space-progress-bottom: 90px;
-  --space-title-bottom: 48px;
+  --screen-justify: flex-start;
 
-  --service-button-height: 104px;
-  --large-choice-height: 220px;
-  --step-size: 170px;
+  --space-screen-padding: 50px;
+  --space-section-gap: 30px;
+  --space-row-gap: 20px;
+  --space-content-left: 50px;
+  --space-progress-bottom: 100px;
+  --space-title-bottom: 30px;
+
+  --service-button-height: 100px;
+  --large-choice-width: 740px;
+  --large-choice-height: 200px;
+
+  --step-size: 180px;
+  --step-border: 6px;
+
+  --pill-main-width: 92px;
+  --pill-main-height: 40px;
+  --pill-bottom-width: 82px;
+  --pill-bottom-height: 44px;
+  --pill-home-width: 104px;
+
+  --resident-width: 370px;
+  --resident-height: 70px;
+  --count-width: 720px;
+  --count-height: 70px;
+  --small-count-width: 110px;
+  --total-count-width: 150px;
+
+  --keypad-width: 250px;
+  --keypad-height: 90px;
+  --keypad-grid-width: 790px;
+
+  --font-title: 50px;
+  --font-field-label: 40px;
+  --font-service-button: 35px;
+  --font-large-choice: 60px;
+  --font-progress: 30px;
+  --font-input: 48px;
+  --font-summary: 40px;
+  --font-pill-main: 35px;
+  --font-pill-bottom: 40px;
+  --font-keypad: 64px;
+  --font-status: 11px;
+
+  /* 타이틀 시작 위치: 위에서 1/3 */
+  --low-screen-title-offset: calc(var(--screen-min-height) / 3 - var(--space-screen-padding));
 }
 
+/* 메인 화면 타이틀 */
 .screen-frame.low-screen .hero-title-box {
-  margin-bottom: 34px;
+  margin-top: var(--low-screen-title-offset);
+  margin-bottom: 50px;
 }
 
-.screen-frame.low-screen .large-choice-list {
-  gap: 48px;
+/* 나머지 화면 타이틀 시작 위치 */
+.screen-frame.low-screen .content-panel {
+  padding-top: var(--low-screen-title-offset);
+}
+
+/* 공통 압축 */
+.screen-frame.low-screen .section-title {
+  margin-bottom: 50px;
+}
+
+.screen-frame.low-screen .progress-steps {
+  gap: 10px;
+  margin-bottom: 120px;
+}
+
+.screen-frame.low-screen .main-category-list {
+  gap: 40px;
+}
+
+.screen-frame.low-screen .category-card {
+  padding: 10px;
+}
+
+.screen-frame.low-screen .category-label-box {
+  min-height: 28px;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+}
+
+.screen-frame.low-screen .button-grid,
+.screen-frame.low-screen .button-row {
+  gap: 20px;
+}
+
+.screen-frame.low-screen .large-choice-list,
+.screen-frame.low-screen .service-choice-list {
+  gap: 100px;
+}
+
+.screen-frame.low-screen .field-block,
+.screen-frame.low-screen .summary-block {
+  margin-bottom: 14px;
+}
+
+.screen-frame.low-screen .resident-input-row,
+.screen-frame.low-screen .copy-count-row,
+.screen-frame.low-screen .fee-row {
+  gap: 8px;
+}
+.screen-frame.low-screen .resident-input-row {
+  margin-bottom: 24px;
+}
+.screen-frame.low-screen .copy-keypad-wrap {
+  margin-top: 20px;
+}
+
+.screen-frame.low-screen .keypad-grid {
+  gap: 20px;
+}
+
+.screen-frame.low-screen .checkbox-box {
+  width: min(100%, 520px);
+  padding: 10px 12px;
+  gap: 10px;
+}
+
+.screen-frame.low-screen .accessibility-bar,
+.screen-frame.low-screen .bottom-actions {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+/* 마지막 단계: 2줄 2열 재배열 */
+.screen-frame.low-screen .confirm-panel .content-body-frame.body-left-frame {
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 20px;
+  row-gap: 10px;
+  align-items: start;
+  margin-left: 0;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-block:nth-of-type(1) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-block:nth-of-type(3) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-block:nth-of-type(2) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-block.fee-block {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.screen-frame.low-screen .confirm-panel .total-fee {
+  grid-column: 2;
+  grid-row: 3;
+  margin-top: 120px;
+  justify-self: start;
+  align-self: start;
+  font-size: var(--font-summary);
+  gap: 8px;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-input,
+.screen-frame.low-screen .confirm-panel .summary-textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-input {
+  padding: 0 10px;
+}
+
+.screen-frame.low-screen .confirm-panel .summary-textarea {
+  min-height: 70px;
+  padding: 10px;
+  line-height: 1.25;
+}
+
+.screen-frame.low-screen .confirm-panel .fee-row {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 낮은화면 + 확대하기 */
+.screen-frame.low-screen.large-font {
+  --space-screen-padding: 50px;
+  --space-section-gap: 30px;
+  --space-row-gap: 20px;
+  --space-content-left: 40px;
+  --space-progress-bottom: 100px;
+  --space-title-bottom: 30px;
+
+  --service-button-height: 110px;
+  --large-choice-width: 800px;
+  --large-choice-height: 250px;
+
+  --step-size: 180px;
+
+  --pill-main-width: 180px;
+  --pill-main-height: 50px;
+  --pill-bottom-width: 145px;
+  --pill-bottom-height: 82px;
+  --pill-home-width: 200px;
+
+  --resident-width: 420px;
+  --resident-height: 100px;
+  --count-width: 780px;
+  --count-height: 100px;
+  --small-count-width: 100px;
+  --total-count-width: 150px;
+
+  --keypad-width: 270px;
+  --keypad-height: 110px;
+  --keypad-grid-width: 850px;
+
+  --font-title: 62px;
+  --font-field-label: 46px;
+  --font-service-button: 42px;
+  --font-large-choice: 76px;
+  --font-progress: 34px;
+  --font-input: 56px;
+  --font-summary: 46px;
+  --font-pill-main: 40px;
+  --font-pill-bottom: 46px;
+  --font-keypad: 72px;
+  --font-status: 11px;
+
+  --low-screen-title-offset: calc(var(--screen-min-height) / 3 - var(--space-screen-padding));
+}
+
+.screen-frame.low-screen.large-font .main-category-list {
+  gap: 15px;
+}
+
+.screen-frame.low-screen.large-font .progress-steps {
+  gap: 8px;
+  margin-bottom: 60px;
+}
+
+.screen-frame.low-screen.large-font .category-card {
+  padding: 8px;
+}
+
+.screen-frame.low-screen.large-font .button-grid,
+.screen-frame.low-screen.large-font .button-row {
+  gap: 13px;
+}
+.screen-frame.low-screen.large-font .keypad-grid {
+  gap: 20px;
+}
+
+.screen-frame.low-screen.large-font .confirm-panel .content-body-frame.body-left-frame {
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+.screen-frame.low-screen.large-font .confirm-panel .summary-textarea {
+  min-height: 60px;
 }

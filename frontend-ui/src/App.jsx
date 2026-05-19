@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MainScreen from './components/MainScreen';
 import ScreenFrame from './components/ScreenFrame';
 import ServiceSelect from './components/ServiceSelect';
@@ -13,12 +13,6 @@ import {
   subscribeUiCommands,
   sendFrontEvent,
   sendUiAck,
-  createApplication,
-  endSession,
-  getServices,
-  saveInteractionLog,
-  startSession,
-  applyAccessibilityAction,
   disconnectStomp,
 } from './api/api';
 
@@ -47,16 +41,17 @@ const initialForm = {
 
 export default function App() {
   const [screen, setScreen] = useState(STEP_MAIN);
-  const [categories, setCategories] = useState(LOCAL_SERVICE_CATEGORIES);
+  const [categories] = useState(LOCAL_SERVICE_CATEGORIES);
   const [sessionId, setSessionId] = useState('');
   const [accessibility, setAccessibility] = useState(USER_TYPES.NORMAL);
   const [statusMessage, setStatusMessage] = useState('');
   const [submittedApplicationNo, setSubmittedApplicationNo] = useState('');
   const [form, setForm] = useState(initialForm);
 
+  const submitResetTimerRef = useRef(null);
+
   useEffect(() => {
     let mounted = true;
-    let currentSessionId = '';
 
     async function bootstrap() {
       try {
@@ -68,30 +63,24 @@ export default function App() {
           },
         });
 
-        const [sessionResult, services] = await Promise.all([startSession('NORMAL'), getServices()]);
-        if (!mounted) return;
+        // 앱 시작 알림만 보냄
+        await sendFrontEvent('FRONT_READY', { ui: 'kiosk' });
 
-        const nextSessionId = sessionResult.sessionId || '';
-        currentSessionId = nextSessionId;
-
-        setSessionId(nextSessionId);
-        setCategories(Array.isArray(services) ? services : LOCAL_SERVICE_CATEGORIES);
-
-        if (sessionResult.accessibility) {
-          setAccessibility((prev) => ({
-            ...prev,
-            ...sessionResult.accessibility,
-            fontSize: Number.parseInt(sessionResult.accessibility.fontSize, 10) || prev.fontSize,
-          }));
-        }
-
+        // 세션은 서버가 내려주는 값을 받는 구조로 가정
         await subscribeUiCommands({
-          sessionId: nextSessionId,
+          sessionId: '',
           onCommand: async (message) => {
-            if (!message) return;
+            if (!mounted || !message) return;
 
             const action = message.action;
             const data = message.data || {};
+
+            if (action === 'SESSION_ASSIGNED') {
+              if (data.sessionId) {
+                setSessionId(data.sessionId);
+              }
+              return;
+            }
 
             if (action === 'ADAPT_UI') {
               if (data.accessibility) {
@@ -101,7 +90,9 @@ export default function App() {
                   fontSize: Number.parseInt(data.accessibility.fontSize, 10) || prev.fontSize,
                 }));
               }
-              await sendUiAck('ADAPT_UI', { sessionId: nextSessionId });
+              await sendUiAck('ADAPT_UI', {
+                sessionId: data.sessionId || sessionId,
+              });
               return;
             }
 
@@ -119,20 +110,29 @@ export default function App() {
               if (allowedPages.includes(targetPage)) {
                 setScreen(targetPage);
               }
-              await sendUiAck('MOVE_PAGE', { sessionId: nextSessionId, page: targetPage });
+
+              await sendUiAck('MOVE_PAGE', {
+                sessionId: data.sessionId || sessionId,
+                page: targetPage,
+              });
               return;
             }
 
             if (action === 'GO_HOME') {
+              clearSubmitResetTimer();
               setForm(initialForm);
               setSubmittedApplicationNo('');
               setStatusMessage('');
               setScreen(STEP_MAIN);
-              await sendUiAck('GO_HOME', { sessionId: nextSessionId });
+
+              await sendUiAck('GO_HOME', {
+                sessionId: data.sessionId || sessionId,
+              });
               return;
             }
 
             if (action === 'SESSION_EXPIRED') {
+              clearSubmitResetTimer();
               setForm(initialForm);
               setSubmittedApplicationNo('');
               setStatusMessage('세션이 만료되었습니다. 처음 화면으로 이동합니다.');
@@ -142,11 +142,28 @@ export default function App() {
 
             if (action === 'IDLE_WARNING') {
               setStatusMessage(data.message || '잠시 후 처음 화면으로 돌아갑니다.');
+              return;
+            }
+
+            if (action === 'SUBMIT_RESULT') {
+              setSubmittedApplicationNo(data.applicationNo || '');
+              setStatusMessage(
+                data.message || `접수가 완료되었습니다. 신청번호: ${data.applicationNo || '확인 필요'}`
+              );
+
+              clearSubmitResetTimer();
+              submitResetTimerRef.current = setTimeout(() => {
+                setForm(initialForm);
+                setSubmittedApplicationNo('');
+                setStatusMessage('');
+                setScreen(STEP_MAIN);
+              }, 2500);
             }
           },
         });
       } catch (error) {
         console.error(error);
+        setStatusMessage('서버 연결에 실패했습니다.');
       }
     }
 
@@ -154,16 +171,22 @@ export default function App() {
 
     return () => {
       mounted = false;
-      if (currentSessionId) {
-        endSession(currentSessionId);
-      }
+      clearSubmitResetTimer();
       disconnectStomp();
     };
   }, []);
 
+  const clearSubmitResetTimer = () => {
+    if (submitResetTimerRef.current) {
+      clearTimeout(submitResetTimerRef.current);
+      submitResetTimerRef.current = null;
+    }
+  };
+
   const confirmSummary = useMemo(() => {
     const serviceName = form.selectedServiceLabel || form.selectedMenuName || '주민등록등본 발급';
     const issueTypeLabel = form.issueType === 'all' ? '전체발급' : '선택발급';
+
     return {
       serviceName,
       issueTypeLabel,
@@ -174,13 +197,9 @@ export default function App() {
 
   const totalFee = (Number(form.copyCount) || 0) * FEE_PER_COPY;
 
-  const logAction = async (action, payload = {}) => {
-    await saveInteractionLog(sessionId, action, payload);
-  };
-
   const resetToHome = async () => {
+    clearSubmitResetTimer();
     await sendFrontEvent('USER_CANCEL', { sessionId });
-    await logAction('GO_HOME');
     setForm(initialForm);
     setSubmittedApplicationNo('');
     setStatusMessage('');
@@ -188,21 +207,48 @@ export default function App() {
   };
 
   const handleAccessibilityAction = async (actionKey) => {
-    if (actionKey === 'voiceGuide') {
-      setStatusMessage('음성안내는 추후 TTS 모듈과 연결하면 됩니다.');
-      await sendFrontEvent('USER_TOUCH', { sessionId, actionKey });
-      await logAction('VOICE_GUIDE_CLICK');
+    // 키 이름 통일: MainScreen은 voiceMode를 보고 있는데
+    // 기존 App 쪽은 voiceGuide를 쓰고 있어서 여기 맞춰줌
+    if (actionKey === 'voiceMode') {
+      setAccessibility((prev) => ({
+        ...prev,
+        voiceMode: !prev.voiceMode,
+      }));
+
+      await sendFrontEvent('TOGGLE_ACCESSIBILITY', {
+        sessionId,
+        actionKey,
+        enabled: !accessibility.voiceMode,
+      });
       return;
     }
 
-    const nextAccessibility = await applyAccessibilityAction(sessionId, accessibility, actionKey);
+    const nextAccessibility = { ...accessibility };
+
+    if (actionKey === 'highContrast') {
+      nextAccessibility.highContrast = !nextAccessibility.highContrast;
+    } else if (actionKey === 'largeFont') {
+      nextAccessibility.largeFont = !nextAccessibility.largeFont;
+      nextAccessibility.fontSize = nextAccessibility.largeFont ? 24 : 16;
+    } else if (actionKey === 'lowScreenMode') {
+      nextAccessibility.lowScreenMode = !nextAccessibility.lowScreenMode;
+    }
+
     setAccessibility(nextAccessibility);
-    await logAction('UPDATE_ACCESSIBILITY', nextAccessibility);
+
+    await sendFrontEvent('TOGGLE_ACCESSIBILITY', {
+      sessionId,
+      actionKey,
+      accessibility: nextAccessibility,
+    });
   };
 
   const handleMainServiceClick = async (item) => {
-    await sendFrontEvent('USER_TOUCH', { sessionId, serviceId: item.id });
-    await logAction('SELECT_MAIN_MENU', item);
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'SELECT_MAIN_MENU',
+      menuId: item.id,
+    });
 
     if (item.type === 'resident') {
       setForm((prev) => ({
@@ -225,13 +271,18 @@ export default function App() {
       selectedServiceId: service.id,
       selectedServiceLabel: service.label,
     }));
-    await sendFrontEvent('USER_TOUCH', { sessionId, serviceId: service.id });
-    await logAction('SELECT_SERVICE_TYPE', service);
+
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'SELECT_SERVICE_TYPE',
+      serviceId: service.id,
+    });
   };
 
   const handleResidentKeypad = async (key) => {
     setForm((prev) => {
       const frontFull = prev.residentFront.length >= 6;
+
       if (key === 'X') {
         if (prev.residentBack.length > 0) {
           return { ...prev, residentBack: prev.residentBack.slice(0, -1) };
@@ -240,12 +291,24 @@ export default function App() {
       }
 
       if (!/^\d$/.test(key)) return prev;
-      if (!frontFull) return { ...prev, residentFront: `${prev.residentFront}${key}`.slice(0, 6) };
-      return { ...prev, residentBack: `${prev.residentBack}${key}`.slice(0, 7) };
+      if (!frontFull) {
+        return {
+          ...prev,
+          residentFront: `${prev.residentFront}${key}`.slice(0, 6),
+        };
+      }
+
+      return {
+        ...prev,
+        residentBack: `${prev.residentBack}${key}`.slice(0, 7),
+      };
     });
 
-    await sendFrontEvent('USER_TOUCH', { sessionId, key, inputType: 'resident_number' });
-    await logAction('INPUT_RESIDENT_NUMBER', { key });
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'INPUT_RESIDENT_NUMBER',
+      key,
+    });
   };
 
   const handleCopyCountKeypad = async (key) => {
@@ -254,12 +317,16 @@ export default function App() {
         return { ...prev, copyCount: prev.copyCount.slice(0, -1) };
       }
       if (!/^\d$/.test(key)) return prev;
+
       const next = `${prev.copyCount}${key}`.replace(/^0+(?=\d)/, '').slice(0, 2);
       return { ...prev, copyCount: next };
     });
 
-    await sendFrontEvent('USER_TOUCH', { sessionId, key, inputType: 'copy_count' });
-    await logAction('INPUT_COPY_COUNT', { key });
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'INPUT_COPY_COUNT',
+      key,
+    });
   };
 
   const handlePrev = async () => {
@@ -272,11 +339,15 @@ export default function App() {
     };
 
     const prev = prevMap[screen];
-    if (prev) {
-      await sendFrontEvent('USER_CANCEL', { sessionId, from: screen, to: prev });
-      await logAction('GO_PREVIOUS', { from: screen, to: prev });
-      setScreen(prev);
-    }
+    if (!prev) return;
+
+    await sendFrontEvent('USER_CANCEL', {
+      sessionId,
+      from: screen,
+      to: prev,
+    });
+
+    setScreen(prev);
   };
 
   const handleNext = async () => {
@@ -288,11 +359,16 @@ export default function App() {
     };
 
     const next = nextMap[screen];
-    if (next) {
-      await sendFrontEvent('USER_TOUCH', { sessionId, from: screen, to: next, action: 'NEXT' });
-      await logAction('GO_NEXT', { from: screen, to: next });
-      setScreen(next);
-    }
+    if (!next) return;
+
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'NEXT',
+      from: screen,
+      to: next,
+    });
+
+    setScreen(next);
   };
 
   const handleIssueTypeChange = async (issueType) => {
@@ -302,7 +378,11 @@ export default function App() {
       selectedHistoryOptions: issueType === 'all' ? [] : prev.selectedHistoryOptions,
     }));
 
-    await sendFrontEvent('USER_TOUCH', { sessionId, issueType });
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'CHANGE_ISSUE_TYPE',
+      issueType,
+    });
   };
 
   const toggleHistoryOption = async (option) => {
@@ -313,7 +393,11 @@ export default function App() {
         : [...prev.selectedHistoryOptions, option],
     }));
 
-    await sendFrontEvent('USER_TOUCH', { sessionId, option });
+    await sendFrontEvent('USER_TOUCH', {
+      sessionId,
+      action: 'TOGGLE_HISTORY_OPTION',
+      option,
+    });
   };
 
   const handleSubmit = async () => {
@@ -329,19 +413,8 @@ export default function App() {
       totalFee,
     };
 
-    const result = await createApplication(payload);
-    setSubmittedApplicationNo(result.applicationNo || '발급 접수 완료');
-    setStatusMessage(`접수가 완료되었습니다. 신청번호: ${result.applicationNo || '임시번호 생성'}`);
-
-    await sendFrontEvent('SERVICE_COMPLETE', {
-      sessionId,
-      applicationNo: result.applicationNo,
-    });
-    await logAction('SUBMIT_APPLICATION', result);
-
-    setTimeout(() => {
-      resetToHome();
-    }, 2500);
+    await sendFrontEvent('SUBMIT_APPLICATION', payload);
+    setStatusMessage('접수 요청을 전송했습니다.');
   };
 
   const renderScreen = () => {
@@ -352,8 +425,10 @@ export default function App() {
             categories={categories}
             onSelectService={handleMainServiceClick}
             onAccessibilityAction={handleAccessibilityAction}
+            accessibility={accessibility}
           />
         );
+
       case STEP_SERVICE:
         return (
           <ServiceSelect
@@ -364,6 +439,7 @@ export default function App() {
             onNext={handleNext}
           />
         );
+
       case STEP_VERIFY:
         return (
           <IdentityVerify
@@ -375,6 +451,7 @@ export default function App() {
             onNext={handleNext}
           />
         );
+
       case STEP_ISSUE_CONTENT:
         return (
           <IssueContentPage
@@ -388,6 +465,7 @@ export default function App() {
             onNext={handleNext}
           />
         );
+
       case STEP_COPY_COUNT:
         return (
           <CopyCountPage
@@ -398,6 +476,7 @@ export default function App() {
             onNext={handleNext}
           />
         );
+
       case STEP_CONFIRM:
         return (
           <ConfirmFee
@@ -409,6 +488,7 @@ export default function App() {
             onSubmit={handleSubmit}
           />
         );
+
       default:
         return null;
     }
@@ -419,7 +499,9 @@ export default function App() {
       <ScreenFrame accessibility={accessibility}>
         {renderScreen()}
         {statusMessage ? <div className="status-message">{statusMessage}</div> : null}
-        {submittedApplicationNo ? <div className="status-message">신청번호: {submittedApplicationNo}</div> : null}
+        {submittedApplicationNo ? (
+          <div className="status-message">신청번호: {submittedApplicationNo}</div>
+        ) : null}
       </ScreenFrame>
     </div>
   );

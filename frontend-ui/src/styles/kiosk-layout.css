@@ -7,23 +7,24 @@
   width: min(100%, var(--screen-max-width));
   margin: 0 auto;
   background: var(--color-surface);
-  min-height: var(--screen-min-height);
+  height: var(--screen-min-height);
   border-radius: var(--radius-screen);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
   color: var(--color-text);
   font-size: var(--font-base);
+  overflow: hidden;
 }
 
 .screen-inner {
   padding: var(--space-screen-padding);
   display: flex;
-  min-height: var(--screen-min-height);
+  height: 100%;
   flex-direction: column;
-  justify-content: var(--screen-justify);
+  justify-content: flex-start;
 }
 
 .content-panel {
-  flex: 1;
+  flex: 0 1 auto;
 }
 
 .content-body-frame {

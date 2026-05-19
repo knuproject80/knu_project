@@ -7,6 +7,7 @@ function cleanSelectedOptions(options = []) {
 
 export default function ConfirmFee({ summary, fee, totalFee, onHome, onPrev, onSubmit }) {
   const cleanedOptions = cleanSelectedOptions(summary.selectedOptions);
+  const isSelectIssue = summary.issueTypeLabel === '선택발급';
 
   return (
     <>
@@ -23,13 +24,18 @@ export default function ConfirmFee({ summary, fee, totalFee, onHome, onPrev, onS
           <div className="summary-block">
             <label className="field-label">신청내용</label>
             <div className="summary-textarea">
-              {summary.issueTypeLabel}
-              {cleanedOptions.length ? (
+              {isSelectIssue ? (
                 <>
-                  <br />
-                  {cleanedOptions.join('\n')}
+                  <div className="summary-main-option">{summary.issueTypeLabel}</div>
+                  {cleanedOptions.map((option, index) => (
+                    <div key={`${option}-${index}`} className="summary-sub-option">
+                      {option}
+                    </div>
+                  ))}
                 </>
-              ) : null}
+              ) : (
+                summary.issueTypeLabel
+              )}
             </div>
           </div>
 
@@ -43,7 +49,7 @@ export default function ConfirmFee({ summary, fee, totalFee, onHome, onPrev, onS
             <div className="fee-row">
               <span>1장 당</span>
 
-              <div className="small-count-box">400</div>
+              <div className="small-count-box">{fee}</div>
               <span>원</span>
 
               <span>x</span>
@@ -55,9 +61,7 @@ export default function ConfirmFee({ summary, fee, totalFee, onHome, onPrev, onS
 
           <div className="total-fee">
             합계 수수료:
-            <div className="small-count-box total-box">
-              {totalFee}
-            </div>
+            <div className="small-count-box total-box">{totalFee}</div>
             <span>원</span>
           </div>
         </div>
