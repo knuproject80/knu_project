@@ -1,0 +1,631 @@
+:root {
+  --blue: #3095ed;
+  --light-blue: #dcedff;
+  --gray-bg: #efefef;
+  --gray-line: #d9d9d9;
+  --gray-fill: #d9d9d9;
+  --text: #1f1f1f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--gray-bg);
+}
+
+.app-shell {
+  padding: 50px;
+}
+
+.screen-frame {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  background: #fff;
+  min-height: 1920px;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  color: var(--text);
+  font-size: var(--base-font-size, 16px);
+}
+
+.screen-inner {
+  padding: 50px;
+  display: flex;
+  min-height: 1920px;
+  flex-direction: column;
+}
+
+.content-body-frame {
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.body-center-frame {
+  margin: 0 auto;
+}
+
+.body-left-frame {
+  margin-left: 50px;
+  margin-right: auto;
+}
+
+/* 상단 제목 */
+.hero-title-box {
+  margin: 0 0 50px;
+}
+
+.hero-title,
+.section-title {
+  margin: 0;
+  font-size: 50px;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+
+.section-title { /*맨 상단 문장*/
+  margin-bottom: 80px;
+}
+
+
+/* 메인 카테고리 묶음 */
+.main-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+}
+
+.category-card {
+  border: 2px solid var(--blue);
+  border-radius: 26px;
+  padding: 25px;
+}
+
+.category-label-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 170px;
+  min-height: 56px;
+  padding: 8px 18px;
+  margin-bottom: 25px;
+  border: none;
+  border-radius: 0;
+  background: #fff;
+}
+
+.category-title,
+.field-label {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 20px;
+}
+
+/* 버튼 배치 */
+.button-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+/* 메인 / 일반 선택 버튼 */
+.service-button,
+.large-choice-button {
+  border: 3px solid var(--blue);
+  background:  var(--light-blue);
+  border-radius: 20px;
+  padding: 12px 10px;
+  font-weight: 700;
+  color: #444;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    transform 0.08s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.service-button {
+  min-width: 0;
+  min-height: 120px;
+  font-size: 35px;
+}
+
+.large-choice-button {
+  width: min(100%, 700px);
+  min-height: 250px;
+  font-size: 64px;
+  align-self: center;
+}
+
+.service-button span {
+  display: block;
+}
+
+.service-button.selected,
+.large-choice-button.selected {
+  background: #cfe4fb;
+  box-shadow: 0 10px 24px rgba(48, 149, 237, 0.18);
+  filter: saturate(1.05);
+}
+
+.service-button:active,
+.large-choice-button:active,
+.pill-button:active,
+.keypad-button:active {
+  transform: translateY(1px);
+}
+
+.service-button:active,
+.large-choice-button:active {
+  background: #cfe4fb;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(48, 149, 237, 0.18);
+}
+
+/* 하단 버튼 영역 */
+.accessibility-bar,
+.bottom-actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.accessibility-bar {
+  padding-top: 50px;
+}
+
+.bottom-actions {
+  padding-top: 50px;
+}
+
+.bottom-actions-right {
+  display: flex;
+  gap: 20px;
+}
+
+/* 공통 pill 버튼 */
+.pill-button {
+  border: none;
+  background: var(--gray-fill);
+  color: #333;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit-button {
+  background: #3095ED;
+}
+
+/* 메인화면 하단 접근성 버튼 */
+.accessibility-bar .pill-button {
+  min-width: 150px;
+  min-height: 62px;
+  padding: 10px 18px;
+  font-size: 35px;
+}
+
+/* 각 페이지 하단 버튼 */
+.bottom-actions .pill-button {
+  min-width: 120px;
+  min-height: 68px;
+  padding: 10px 18px;
+  font-size: 40px;
+}
+
+.bottom-actions .pill-button.primary { /*메인으로 버튼*/
+  min-width: 168px;
+  min-height: 68px;
+  background: var(--gray-fill);
+  color: #333;
+}
+
+.bottom-actions .pill-button.submit {
+  background: var(--blue);
+  color: #fff;
+}
+
+.pill-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 진행 단계 */
+.progress-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  margin-bottom: 200px;
+}
+
+.step-item {
+  display: flex;
+  justify-content: center;
+}
+
+.step-circle {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 6px solid #d0d0d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 30px;
+  font-weight: 500;
+  color: #c6c6c6;
+  line-height: 1.2;
+  word-break: keep-all;
+  padding: 8px;
+}
+
+.step-item.active .step-circle {
+  border-color: var(--blue);
+  color: #222;
+}
+
+.content-panel {
+  flex: 1;
+}
+
+.centered-panel,
+.identity-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.service-choice-list {
+  margin-top: 0;
+}
+
+.large-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 100px;
+  align-items: center;
+}
+
+.compact-top-gap {
+  margin-top: 0;
+}
+
+/* 필드 블록 */
+.field-block {
+  margin-bottom: 50px;
+}
+
+.resident-input-row, /*주민등록번호 앞칸 하이픈 뒷칸을 한줄로 묶는 행*/
+.copy-count-row,
+.fee-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.masked-input,
+.count-input,
+.summary-input,
+.small-count-box {
+  min-height: 68px;
+  border: 2px solid var(--gray-line);
+  border-radius: 16px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 주민등록번호 */
+.masked-input {
+  width: 370px;
+  min-height: 97px;
+  font-size: 48px;
+  letter-spacing: 1px;
+}
+
+.hyphen,
+.count-unit { /* count-unit : 부 글자*/
+  font-size: 48px;
+  font-weight: 700;
+}
+
+/* 키패드 */
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 250px);
+  gap: 20px;
+  max-width: 790px;
+}
+
+.keypad-button {
+  width: 250px;
+  height: 120px;
+  border: none;
+  border-radius: 18px;
+  background: var(--gray-fill);
+  font-size: 64px;
+  cursor: pointer;
+}
+
+.keypad-button.small {
+  width: 250px;
+}
+
+.keypad-spacer {
+  visibility: hidden;
+}
+
+/* 라디오 / 체크박스 */
+.radio-list { /*전체발급/선택발급 묶음 전체*/
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 10px;
+}
+
+.radio-item,
+.checkbox-item { /*각각 한줄*/
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 40px;
+  line-height: 1.2;
+}
+
+.radio-item input,
+.checkbox-item input {/*라디오/체크 버튼 그 차제*/
+  width: 24px;
+  height: 24px;
+  accent-color: var(--blue);
+}
+
+.checkbox-box { /*체크박스 감싸는 큰 네모 박스*/
+  border: 2px solid var(--gray-line);
+  border-radius: 14px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: min(100%, 520px);
+  margin-top: 0px;
+}
+
+/* 발급 부수 */
+.copy-count-row .count-input { /*copy-count-row : 입력칸+부 count-input: 발급부수 입력칸*/
+  width: 700px;
+  min-height: 97px;
+  justify-content: flex-end;
+  padding-right: 18px;
+  font-size: 48px;
+}
+
+.copy-keypad-wrap {
+  margin-top: 25px;
+}
+
+/* 최종 확인 */
+.summary-block { /*신청서비스/신청내용/발급 부수/수수료 한덩이리씩*/
+  margin-bottom: 50px;
+}
+
+.summary-input {/*한줄 입력형 박스*/
+  justify-content: flex-start;
+  padding: 0 16px;
+  font-size: 40px;
+}
+
+.summary-textarea {/*신청내용 큰 박스*/
+  border: 2px solid var(--gray-line);
+  border-radius: 16px;
+  min-height: 160px;
+  padding: 16px;
+  font-size: 40px;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.small-count-box {/*작은 숫자 박스*/
+  width: 120px;
+  font-size: 40px;
+}
+
+.fee-block .fee-row {/*fee row: 400원 * 1장*/
+  gap: 12px;
+  font-size: 40px;
+}
+
+.content-body-frame.body-left-frame {
+  width: 100%;
+  max-width: 900px;
+}
+
+.total-fee {
+  margin-top: 50px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 48px;
+  font-weight: 700;
+  align-self: flex-end;
+}
+
+.total-box {
+  width: 160px;   /* 기존보다 조금 크게 */
+}
+
+.status-message {
+  margin-top: 25px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f4f8ff;
+  color: #1f4f86;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+/* 접근성 옵션 */
+.high-contrast {
+  background: #101010;
+  color: #fff;
+}
+
+.high-contrast .screen-inner,
+.high-contrast .hero-title,
+.high-contrast .section-title,
+.high-contrast .field-label,
+.high-contrast .category-title,
+.high-contrast .radio-item,
+.high-contrast .checkbox-item,
+.high-contrast .summary-input,
+.high-contrast .summary-textarea,
+.high-contrast .masked-input,
+.high-contrast .count-input,
+.high-contrast .service-button,
+.high-contrast .large-choice-button {
+  color: #fff;
+}
+
+.low-screen .screen-inner {
+  justify-content: flex-end;
+}
+
+/* 모바일 축소용 */
+@media (max-width: 1200px) {
+  .app-shell {
+    padding: 24px;
+  }
+
+  .screen-frame { /*전체 하얀 프레임*/
+    width: min(100%, 900px);
+    min-height: 1500px;
+  }
+
+  .screen-inner {/*프레임 안쪽 실제 내용 영역*/
+    padding: 36px;
+    min-height: 1500px;
+  }
+
+  .hero-title,
+  .section-title {
+    font-size: 40px;
+  }
+
+  .category-title,
+  .field-label {
+    font-size: 22px;
+  }
+
+  .service-button {
+    min-height: 96px;
+    font-size: 28px;
+  }
+
+  .large-choice-button {
+    width: min(100%, 620px);
+    min-height: 180px;
+    font-size: 48px;
+  }
+
+  .step-circle {
+    width: 110px;
+    height: 110px;
+    font-size: 24px;
+  }
+
+  .masked-input {
+    width: 280px;
+    min-height: 82px;
+    font-size: 40px;
+  }
+
+  .hyphen,
+  .count-unit {
+    font-size: 40px;
+  }
+
+  .keypad-grid {
+    grid-template-columns: repeat(3, 180px);
+    gap: 14px;
+    max-width: 568px;
+  }
+
+  .keypad-button,
+  .keypad-button.small {
+    width: 180px;
+    height: 92px;
+    font-size: 48px;
+  }
+
+  .radio-item,
+  .checkbox-item,
+  .summary-input,
+  .summary-textarea,
+  .fee-block .fee-row,
+  .total-fee,
+  .copy-count-row .count-input,
+  .small-count-box {
+    font-size: 36px;
+  }
+
+  .copy-count-row .count-input {
+    width: 560px;
+    min-height: 82px;
+  }
+
+  .accessibility-bar .pill-button {
+    font-size: 28px;
+    min-width: 130px;
+    min-height: 56px;
+  }
+
+  .bottom-actions .pill-button {
+    font-size: 32px;
+    min-width: 110px;
+    min-height: 62px;
+  }
+
+  .bottom-actions .pill-button.primary {
+    min-width: 150px;
+  }
+}
