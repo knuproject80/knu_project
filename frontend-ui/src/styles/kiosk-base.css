@@ -1,0 +1,95 @@
+/* 기본 토큰 + reset */
+:root {
+  /* color tokens */
+  --color-blue: #3095ed;
+  --color-light-blue: #dcedff;
+  --color-bg-app: #efefef;
+  --color-surface: #ffffff;
+  --color-line: #d9d9d9;
+  --color-fill: #d9d9d9;
+  --color-text: #1f1f1f;
+  --color-text-muted: #333333;
+  --color-text-soft: #444444;
+
+  /* radius tokens */
+  --radius-screen: 16px;
+  --radius-card: 26px;
+  --radius-button: 20px;
+  --radius-pill: 999px;
+  --radius-box: 16px;
+  --radius-keypad: 18px;
+
+  /* space tokens */
+  --space-screen-padding: 50px;
+  --space-section-gap: 50px;
+  --space-row-gap: 20px;
+  --space-content-left: 50px;
+  --space-progress-bottom: 200px;
+  --space-title-bottom: 80px;
+
+  /* typography tokens */
+  --font-base: 16px;
+  --font-title: 50px;
+  --font-field-label: 40px;
+  --font-service-button: 35px;
+  --font-large-choice: 64px;
+  --font-progress: 30px;
+  --font-input: 48px;
+  --font-summary: 40px;
+  --font-pill-main: 35px;
+  --font-pill-bottom: 40px;
+  --font-keypad: 64px;
+  --font-status: 24px;
+
+  /* size tokens */
+  --screen-max-width: 1080px;
+  --screen-min-height: 1920px;
+  --category-label-width: 170px;
+  --category-label-height: 56px;
+
+  --service-button-height: 120px;
+  --large-choice-width: 700px;
+  --large-choice-height: 250px;
+
+  --step-size: 200px;
+  --step-border: 6px;
+
+  --pill-main-width: 150px;
+  --pill-main-height: 62px;
+  --pill-bottom-width: 120px;
+  --pill-bottom-height: 68px;
+  --pill-home-width: 168px;
+
+  --resident-width: 370px;
+  --resident-height: 97px;
+  --count-width: 700px;
+  --count-height: 97px;
+  --small-count-width: 120px;
+  --total-count-width: 160px;
+
+  --keypad-width: 250px;
+  --keypad-height: 120px;
+  --keypad-grid-width: 790px;
+
+  /* state tokens */
+  --screen-justify: flex-start;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg-app);
+}

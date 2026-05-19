@@ -1,0 +1,14 @@
+/* 음성 안내/음성 인식 모드: 시각적 포커스 보조 */
+.screen-frame.voice-mode .service-button:focus-visible,
+.screen-frame.voice-mode .large-choice-button:focus-visible,
+.screen-frame.voice-mode .pill-button:focus-visible,
+.screen-frame.voice-mode .keypad-button:focus-visible,
+.screen-frame.voice-mode .radio-item:focus-within,
+.screen-frame.voice-mode .checkbox-item:focus-within {
+  outline: 6px solid #ff9f0a;
+  outline-offset: 4px;
+}
+
+.screen-frame.voice-mode .status-message {
+  border: 3px solid #ff9f0a;
+}

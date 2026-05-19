@@ -1,0 +1,305 @@
+/* 타이포 */
+.hero-title,
+.section-title {
+  margin: 0;
+  font-size: var(--font-title);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+
+.section-title {
+  margin-bottom: var(--space-title-bottom);
+}
+
+.category-title,
+.field-label {
+  margin: 0;
+  font-size: var(--font-field-label);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 20px;
+}
+
+/* 버튼 */
+.service-button,
+.large-choice-button {
+  border: 3px solid var(--color-blue);
+  background: var(--color-light-blue);
+  border-radius: var(--radius-button);
+  padding: 12px 10px;
+  font-weight: 700;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    transform 0.08s ease,
+    box-shadow 0.12s ease,
+    filter 0.12s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.service-button {
+  min-width: 0;
+  min-height: var(--service-button-height);
+  font-size: var(--font-service-button);
+}
+
+.large-choice-button {
+  width: min(100%, var(--large-choice-width));
+  min-height: var(--large-choice-height);
+  font-size: var(--font-large-choice);
+  align-self: center;
+}
+
+.service-button span {
+  display: block;
+}
+
+.service-button.selected,
+.large-choice-button.selected {
+  background: #cfe4fb;
+  box-shadow: 0 10px 24px rgba(48, 149, 237, 0.18);
+  filter: saturate(1.05);
+}
+
+.service-button:active,
+.large-choice-button:active,
+.pill-button:active,
+.keypad-button:active {
+  transform: translateY(1px);
+}
+
+.service-button:active,
+.large-choice-button:active {
+  background: #cfe4fb;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.08), 0 6px 18px rgba(48, 149, 237, 0.18);
+}
+
+.pill-button {
+  border: none;
+  background: var(--color-fill);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submit-button {
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.accessibility-bar .pill-button {
+  min-width: var(--pill-main-width);
+  min-height: var(--pill-main-height);
+  padding: 10px 18px;
+  font-size: var(--font-pill-main);
+}
+
+.bottom-actions .pill-button {
+  min-width: var(--pill-bottom-width);
+  min-height: var(--pill-bottom-height);
+  padding: 10px 18px;
+  font-size: var(--font-pill-bottom);
+}
+
+.bottom-actions .pill-button.primary {
+  min-width: var(--pill-home-width);
+  min-height: var(--pill-bottom-height);
+  background: var(--color-fill);
+  color: var(--color-text-muted);
+}
+
+.pill-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.accessibility-button.active-accessibility {
+  background: var(--color-blue);
+  color: #ffffff;
+}
+
+/* 진행 단계 */
+.step-circle {
+  width: var(--step-size);
+  height: var(--step-size);
+  border-radius: 50%;
+  border: var(--step-border) solid #d0d0d0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: var(--font-progress);
+  font-weight: 500;
+  color: #c6c6c6;
+  line-height: 1.2;
+  word-break: keep-all;
+  padding: 8px;
+}
+
+.step-item.active .step-circle {
+  border-color: var(--color-blue);
+  color: #222;
+}
+
+/* 입력/박스 */
+.masked-input,
+.count-input,
+.summary-input,
+.small-count-box {
+  min-height: var(--pill-bottom-height);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.masked-input {
+  width: var(--resident-width);
+  min-height: var(--resident-height);
+  font-size: var(--font-input);
+  letter-spacing: 1px;
+}
+
+.hyphen,
+.count-unit {
+  font-size: var(--font-input);
+  font-weight: 700;
+}
+
+.summary-input {
+  justify-content: flex-start;
+  padding: 0 16px;
+  font-size: var(--font-summary);
+}
+
+.summary-textarea {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  min-height: 160px;
+  padding: 16px;
+  font-size: var(--font-summary);
+  line-height: 1.35;
+  white-space: pre-line;
+}
+
+.summary-main-option {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.summary-sub-option {
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.small-count-box {
+  width: var(--small-count-width);
+  font-size: var(--font-summary);
+}
+
+.total-box {
+  width: var(--total-count-width);
+}
+
+.fee-block .fee-row {
+  gap: 12px;
+  font-size: var(--font-summary);
+}
+
+.copy-count-row .count-input {
+  width: var(--count-width);
+  min-height: var(--count-height);
+  justify-content: flex-end;
+  padding-right: 18px;
+  font-size: var(--font-input);
+}
+
+/* 키패드 */
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--keypad-width));
+  gap: var(--space-row-gap);
+  max-width: var(--keypad-grid-width);
+}
+
+.keypad-button {
+  width: var(--keypad-width);
+  height: var(--keypad-height);
+  border: none;
+  border-radius: var(--radius-keypad);
+  background: var(--color-fill);
+  font-size: var(--font-keypad);
+  cursor: pointer;
+}
+
+.keypad-button.small {
+  width: var(--keypad-width);
+}
+
+.keypad-spacer {
+  visibility: hidden;
+}
+
+/* 라디오 / 체크박스 */
+.radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 10px;
+}
+
+.radio-item,
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: var(--font-field-label);
+  line-height: 1.2;
+}
+
+.radio-item input,
+.checkbox-item input {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--color-blue);
+}
+
+.checkbox-box {
+  border: 2px solid var(--color-line);
+  border-radius: 14px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: min(100%, 520px);
+  margin-top: 0;
+}
+
+/* 상태 */
+.status-message {
+  margin-top: 25px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #f4f8ff;
+  color: #1f4f86;
+  font-weight: 600;
+  font-size: var(--font-status);
+}

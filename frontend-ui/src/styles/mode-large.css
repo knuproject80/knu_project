@@ -1,0 +1,43 @@
+/* 확대 모드: 폰트 + 요소 크기 + 간격 전담 */
+.screen-frame.large-font {
+  --font-base: 18px;
+  --font-title: 62px;
+  --font-field-label: 46px;
+  --font-service-button: 42px;
+  --font-large-choice: 76px;
+  --font-progress: 34px;
+  --font-input: 56px;
+  --font-summary: 46px;
+  --font-pill-main: 40px;
+  --font-pill-bottom: 46px;
+  --font-keypad: 72px;
+  --font-status: 28px;
+
+  --space-section-gap: 60px;
+  --space-row-gap: 24px;
+  --space-progress-bottom: 220px;
+  --space-title-bottom: 92px;
+
+  --service-button-height: 148px;
+  --large-choice-width: 780px;
+  --large-choice-height: 320px;
+
+  --step-size: 230px;
+
+  --pill-main-width: 180px;
+  --pill-main-height: 76px;
+  --pill-bottom-width: 145px;
+  --pill-bottom-height: 82px;
+  --pill-home-width: 200px;
+
+  --resident-width: 420px;
+  --resident-height: 118px;
+  --count-width: 780px;
+  --count-height: 118px;
+  --small-count-width: 145px;
+  --total-count-width: 190px;
+
+  --keypad-width: 270px;
+  --keypad-height: 138px;
+  --keypad-grid-width: 850px;
+}

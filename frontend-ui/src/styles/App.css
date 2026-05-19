@@ -1,0 +1,7 @@
+@import './kiosk-base.css';
+@import './kiosk-layout.css';
+@import './kiosk-components.css';
+@import './mode-high-contrast.css';
+@import './mode-large.css';
+@import './mode-low-screen.css';
+@import './mode-voice.css';
