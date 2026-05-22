@@ -1,7 +1,9 @@
 package com.kiosk.websocket;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -9,8 +11,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 /**
  * WebSocket / STOMP 설정.
  *
- * MCP Client 테스트 가이드 문서 기준 토픽 구조:
+ * MCP Client 테스트 가이드 문서 4절 기준:
+ *   - WebSocket URL: ws://localhost:8080/ws
+ *   - STOMP 버전: 1.2 / heart-beat: 10000,10000 (10초)
  *
+ * 토픽 구조:
  *  서버 → 클라이언트 (구독 가능, prefix: /topic):
  *   - /topic/ui/{sessionId}  : 세션별 UI 명령 (ADAPT_UI, MOVE_PAGE, VOICE_GUIDE, GO_HOME, SESSION_EXPIRED)
  *   - /topic/ui/global       : 글로벌 UI 명령
@@ -29,7 +34,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         // 구독 가능한 prefix (서버 → 클라이언트)
-        config.enableSimpleBroker("/topic");
+        // STOMP heartbeat 10초/10초 활성화 (문서 4절 기준)
+        config.enableSimpleBroker("/topic")
+                .setHeartbeatValue(new long[]{10000, 10000})
+                .setTaskScheduler(heartBeatScheduler());
 
         // 클라이언트→서버 전송 prefix (SimpMessagingTemplate 의 @MessageMapping 라우팅 대상)
         config.setApplicationDestinationPrefixes("/app");
@@ -37,7 +45,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // STOMP heartbeat 10초 / 10초 (문서 4. 절 기준)
         // SockJS fallback 지원 (브라우저용)
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
@@ -46,5 +53,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 순수 WebSocket (MCP Client stomp_manager 등 non-SockJS 클라이언트용)
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
+    }
+
+    /**
+     * STOMP heartbeat 전송을 위한 TaskScheduler.
+     * SimpleBroker가 heartbeat 메시지를 주기적으로 보내려면 TaskScheduler가 필요하다.
+     */
+    @Bean
+    public ThreadPoolTaskScheduler heartBeatScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("stomp-heartbeat-");
+        scheduler.initialize();
+        return scheduler;
     }
 }
