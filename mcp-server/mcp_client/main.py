@@ -8,7 +8,6 @@ from mcp_client import MCPToolManager, MCPError
 from intent_analyzer import IntentAnalyzer
 from session_manager import SessionManager
 from ai_client import AIClient, AIClientError
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(name)s] %(levelname)s  %(message)s",
@@ -48,20 +47,20 @@ GUIDE_TEXT = {
     },
 
     # ── 주민등록등본 발급 (serviceId: 102) ──────────────────
-    "CERTIFICATE_SELECT_PURPOSE": {
-        "NORMAL":     "등본 용도를 선택해 주세요.",
-        "ELDERLY":    "등본을 어디에 쓰실 건지 선택해 주세요. 천천히 골라 주세요.",
-        "WHEELCHAIR": "등본 용도를 선택해 주세요.",
+    "CERTIFICATE_SELECT_RRN": {
+        "NORMAL":     "주민등록번호를 입력해 주세요.",
+        "ELDERLY":    "주민등록번호를 입력해 주세요.",
+        "WHEELCHAIR": "주민등록번호를 입력해 주세요.",
+    },
+    "CERTIFICATE_SELECT_SCOPE": {
+        "NORMAL":     "발급 형태를 선택해 주세요.",
+        "ELDERLY":    "발급 형태를 선택해 주세요.",
+        "WHEELCHAIR": "발급 형태를 선택해 주세요.",
     },
     "CERTIFICATE_SELECT_COUNT": {
         "NORMAL":     "발급 매수를 선택해 주세요.",
         "ELDERLY":    "몇 장 필요하신지 선택해 주세요.",
         "WHEELCHAIR": "발급 매수를 선택해 주세요.",
-    },
-    "CERTIFICATE_SELECT_SCOPE": {
-        "NORMAL":     "주민등록번호 공개 범위를 선택해 주세요.",
-        "ELDERLY":    "주민등록번호를 어디까지 보여줄지 선택해 주세요.",
-        "WHEELCHAIR": "주민등록번호 공개 범위를 선택해 주세요.",
     },
     "CERTIFICATE_CONFIRM": {
         "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
@@ -109,6 +108,13 @@ GUIDE_TEXT = {
         "NORMAL":     "전입신고가 완료되었습니다.",
         "ELDERLY":    "전입신고가 완료되었습니다. 고생하셨습니다.",
         "WHEELCHAIR": "전입신고가 완료되었습니다.",
+    },
+
+    # ── 미지원 서비스 ─────────────────────────────────────────
+    "UNSUPPORTED_SERVICE": {
+        "NORMAL":     "죄송합니다. 현재 제공되지 않는 서비스입니다. 다른 서비스를 이용해 주세요.",
+        "ELDERLY":    "죄송합니다. 지금은 해당 서비스를 제공하지 않습니다. 다른 서비스를 말씀해 주세요.",
+        "WHEELCHAIR": "죄송합니다. 현재 제공되지 않는 서비스입니다. 다른 서비스를 이용해 주세요.",
     },
 
     # ── 공통 오류 ────────────────────────────────────────────
@@ -267,7 +273,12 @@ class KioskMainController:
 
         service_id = ai_res.get("serviceId")
         if service_id is None:
-            logger.info("AI 응답에 serviceId 없음 — 서비스 진입 생략")
+            logger.info("AI 응답에 serviceId 없음 — 미지원 서비스 안내 후 생략")
+            await self._send_voice_guide(
+                session_id="global",
+                context="UNSUPPORTED_SERVICE",
+                user_type=self.current_user_type,
+            )
             return
 
         await self._execute_service(service_id)
