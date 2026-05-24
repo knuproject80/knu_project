@@ -22,14 +22,13 @@ IntentType = Literal[
     "unknown",
 ]
 
+# MCP Client 테스트 가이드 기준으로 프론트 화면 이동이 가능한 서비스만 허용한다.
+# 미지원 서비스는 serviceId=None 으로 반환한다.
 ServiceIdType = Literal[
     "RESIDENT_REGISTRATION_COPY",
-    "FAMILY_CERTIFICATE",
+    "RESIDENT_REGISTRATION_ABSTRACT",
     "MOVE_IN_REPORT",
-    "HEALTH_INSURANCE",
-    "MARRIAGE_CERTIFICATE",
-    "TAX_CERTIFICATE",
-    "UNKNOWN",
+    "MOVE_OUT_REPORT",
 ]
 
 SourceType = Literal["rule_based", "llm", "fallback", "mixed"]
@@ -73,7 +72,7 @@ class ServiceRecommendResponse(BaseModel):
     success: bool
     fallback_used: bool
     intent: IntentType
-    serviceId: ServiceIdType
+    serviceId: Optional[ServiceIdType] = None
     confidence: float = Field(..., ge=0.0, le=1.0)
     answer: str
     source: SourceType
@@ -91,7 +90,7 @@ class AnalyzeResponse(BaseModel):
     userTypeReason: str
 
     intent: IntentType
-    serviceId: ServiceIdType
+    serviceId: Optional[ServiceIdType] = None
     serviceConfidence: float = Field(..., ge=0.0, le=1.0)
     answer: str
 

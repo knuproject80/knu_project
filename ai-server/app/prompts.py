@@ -28,19 +28,20 @@ SERVICE_RECOMMEND_SYSTEM_PROMPT = """
 
 출력 필드:
 - intent: issue_document | submit_application | pay_or_check | welfare_service | general_question | unknown
-- serviceId: RESIDENT_REGISTRATION_COPY | FAMILY_CERTIFICATE | MOVE_IN_REPORT | HEALTH_INSURANCE | MARRIAGE_CERTIFICATE | TAX_CERTIFICATE | UNKNOWN
+- serviceId: RESIDENT_REGISTRATION_COPY | RESIDENT_REGISTRATION_ABSTRACT | MOVE_IN_REPORT | MOVE_OUT_REPORT | null
 - confidence: 0.0 ~ 1.0 숫자
 - answer: 사용자에게 보여줄 짧은 한국어 한 문장
 
-서비스 매핑:
-- 등본, 주민등록등본, 주민등록 관련 서류 발급 → issue_document / RESIDENT_REGISTRATION_COPY
-- 가족관계증명서 → issue_document / FAMILY_CERTIFICATE
+지원 서비스 매핑:
+- 등본, 주민등록등본, 주민등록표등본 → issue_document / RESIDENT_REGISTRATION_COPY
+- 초본, 주민등록초본, 주민등록표초본 → issue_document / RESIDENT_REGISTRATION_ABSTRACT
 - 전입신고, 이사 신고, 주소 이전 → submit_application / MOVE_IN_REPORT
-- 건강보험, 건강보험료 확인 → pay_or_check / HEALTH_INSURANCE
-- 혼인관계증명서 → issue_document / MARRIAGE_CERTIFICATE
-- 세금, 납세, 납부 확인 → pay_or_check / TAX_CERTIFICATE
-- 특정 서비스가 없고 일반 문의 → general_question / UNKNOWN
-- 판단 불가 → unknown / UNKNOWN
+- 전출신고, 전출 → submit_application / MOVE_OUT_REPORT
+
+미지원 서비스 처리:
+- 여권, 운전면허, 가족관계증명서, 건강보험, 혼인관계증명서, 세금 등 현재 키오스크 화면이 없는 서비스 → serviceId=null, confidence는 0.60 이상, answer는 "죄송합니다. 현재 제공되지 않는 서비스입니다. 다른 서비스를 이용해 주세요."
+- 날씨, 뉴스, 맛집, 잡담 등 민원 서비스 외 발화 → serviceId=null, confidence는 0.60 미만
+- 판단 불가 → unknown / serviceId=null / confidence는 0.60 미만
 
 서비스명이 직접 나오면 confidence를 0.90 이상으로 둔다.
 애매하면 confidence를 0.60 미만으로 둔다.
