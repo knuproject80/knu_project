@@ -13,9 +13,10 @@ def analyze_text(text: str) -> dict[str, Any]:
 
     service_confidence = float(service_result.get("confidence", 0.0))
     user_confidence = float(user_result.get("confidence", 0.0))
+    service_id = service_result.get("serviceId")
 
     needs_confirmation = (
-        service_result.get("serviceId") == "UNKNOWN"
+        service_id is None
         or service_confidence < settings.AUTO_CONFIRM_CONFIDENCE_THRESHOLD
     )
 
@@ -41,7 +42,7 @@ def analyze_text(text: str) -> dict[str, Any]:
         "userTypeConfidence": user_confidence,
         "userTypeReason": user_result.get("reason", ""),
         "intent": service_result.get("intent", "unknown"),
-        "serviceId": service_result.get("serviceId", "UNKNOWN"),
+        "serviceId": service_id,
         "serviceConfidence": service_confidence,
         "answer": service_result.get("answer", "다시 말씀해 주세요."),
         "needsConfirmation": needs_confirmation,
