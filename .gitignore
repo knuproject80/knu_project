@@ -1,0 +1,9 @@
+.DS_Store
+node_modules/
+frontend-ui/node_modules/
+
+dist/
+frontend-ui/dist/
+
+.env
+frontend-ui/.env

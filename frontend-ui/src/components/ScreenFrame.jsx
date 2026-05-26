@@ -4,6 +4,7 @@ export default function ScreenFrame({ children, className = '', accessibility = 
     accessibility.highContrast ? 'high-contrast' : '',
     accessibility.lowScreenMode ? 'low-screen' : '',
     accessibility.largeFont ? 'large-font' : '',
+    accessibility.voiceMode ? 'voice-mode' : '',
     className,
   ]
     .filter(Boolean)

@@ -97,3 +97,313 @@
   background: #ffff00;
   color: #000000;
 }
+/* 전입신고 + 고대비 */
+.screen-frame.high-contrast .transfer-card,
+.screen-frame.high-contrast .transfer-input,
+.screen-frame.high-contrast .transfer-search-button,
+.screen-frame.high-contrast .transfer-info-table,
+.screen-frame.high-contrast .transfer-table-label,
+.screen-frame.high-contrast .transfer-table-value,
+.screen-frame.high-contrast .transfer-person-head,
+.screen-frame.high-contrast .transfer-person-cell,
+.screen-frame.high-contrast .transfer-extra-row,
+.screen-frame.high-contrast .fake-radio,
+.screen-frame.high-contrast .fake-checkbox {
+  border-color: #ffff00;
+}
+
+.screen-frame.high-contrast .transfer-input,
+.screen-frame.high-contrast .transfer-card,
+.screen-frame.high-contrast .transfer-table-value,
+.screen-frame.high-contrast .transfer-person-cell {
+  background: #000000;
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .transfer-input.readonly,
+.screen-frame.high-contrast .transfer-table-label,
+.screen-frame.high-contrast .transfer-person-head,
+.screen-frame.high-contrast .transfer-extra-row {
+  background: #000000;
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .transfer-search-button,
+.screen-frame.high-contrast .transfer-option-button,
+.screen-frame.high-contrast .building-help-button,
+.screen-frame.high-contrast .text-blue,
+.screen-frame.high-contrast .transfer-card-title span,
+.screen-frame.high-contrast .transfer-field-label span,
+.screen-frame.high-contrast .transfer-sub-label span,
+.screen-frame.high-contrast .transfer-notice,
+.screen-frame.high-contrast .transfer-notice strong,
+.screen-frame.high-contrast .transfer-row-arrow {
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .fake-radio.checked::after,
+.screen-frame.high-contrast .fake-checkbox.checked {
+  background: #ffff00;
+}
+
+.screen-frame.high-contrast .fake-checkbox.checked::after {
+  color: #000000;
+}
+
+.screen-frame.high-contrast .transfer-notice span {
+  color: #ff4b4b;
+}
+
+.screen-frame.high-contrast .transfer-summary-block {
+  border-color: #ffff00;
+  background: #000000;
+}
+
+.screen-frame.high-contrast .fake-radio,
+.screen-frame.high-contrast .fake-checkbox {
+  border-color: #ffff00;
+}
+
+.screen-frame.high-contrast .fake-radio.checked::after,
+.screen-frame.high-contrast .fake-checkbox.checked {
+  background: #ffff00;
+}
+
+.screen-frame.high-contrast .fake-checkbox.checked::after {
+  color: #000000;
+}
+
+/* 전입신고 v4: 입력 키보드 고대비 */
+.screen-frame.high-contrast .input-like-button,
+.screen-frame.high-contrast .text-keyboard-button {
+  border-color: #ffff00;
+}
+
+.screen-frame.high-contrast .text-keyboard-button {
+  background: #d9d9d9;
+  color: #111111;
+}
+
+.screen-frame.high-contrast .input-like-button,
+.screen-frame.high-contrast .name-input {
+  background: #000000;
+  color: #ffff00;
+}
+
+/* 전입신고 v5: 고대비 키보드/키패드 */
+.screen-frame.high-contrast .transfer-keyboard-panel {
+  background: #000000;
+  border-color: #ffff00;
+  box-shadow: 0 -10px 34px rgba(255, 255, 0, 0.18);
+}
+
+.screen-frame.high-contrast .text-keyboard-button {
+  background: #d9d9d9;
+  color: #111111;
+  border: none;
+}
+
+/* 전입신고 v7: 키보드 입력 미리보기 고대비 */
+.screen-frame.high-contrast .keyboard-preview,
+.screen-frame.high-contrast .keyboard-preview-input {
+  border-color: #ffff00;
+  background: #000000;
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .keyboard-preview-input.active {
+  box-shadow: 0 0 0 4px rgba(255, 255, 0, 0.28);
+}
+
+.screen-frame.high-contrast .keyboard-preview-label,
+.screen-frame.high-contrast .keyboard-preview-label span {
+  color: #ffff00;
+}
+
+/* 전입신고 v9: 고대비에서 요약 색상 구분 보정 */
+.screen-frame.high-contrast .transfer-summary-block h4 {
+  color: #ffff00;
+  border-bottom-color: #ffff00;
+}
+
+.screen-frame.high-contrast .transfer-summary-block strong {
+  background: transparent;
+  color: #ffff00;
+  border-left-color: #ffff00;
+}
+
+.screen-frame.high-contrast .transfer-summary-block span,
+.screen-frame.high-contrast .transfer-summary-block li,
+.screen-frame.high-contrast .transfer-summary-block li::marker {
+  color: #ffff00;
+}
+
+/* 전입신고 v11: 고대비 구조선 회색 보정
+   - 클릭/강조 버튼은 노랑 유지
+   - 구조를 나누는 표/카드/키패드 패널/체크박스 외곽선은 회색 처리 */
+.screen-frame.high-contrast {
+  --high-contrast-structure-line: #777777;
+  --high-contrast-structure-text: #d9d9d9;
+}
+
+/* 1) 키패드/키보드가 올라오는 패널: 외곽선, 미리보기 테두리, 안내 글씨 회색 */
+.screen-frame.high-contrast .transfer-keyboard-panel {
+  border-color: var(--high-contrast-structure-line);
+  color: var(--high-contrast-structure-text);
+  box-shadow: 0 -10px 34px rgba(217, 217, 217, 0.16);
+}
+
+.screen-frame.high-contrast .keyboard-preview,
+.screen-frame.high-contrast .keyboard-preview-input {
+  border-color: var(--high-contrast-structure-line);
+  color: var(--high-contrast-structure-text);
+}
+
+.screen-frame.high-contrast .keyboard-preview-input.active {
+  border-color: var(--high-contrast-structure-line);
+  box-shadow: 0 0 0 4px rgba(217, 217, 217, 0.22);
+}
+
+.screen-frame.high-contrast .keyboard-preview-label,
+.screen-frame.high-contrast .keyboard-preview-label span,
+.screen-frame.high-contrast .transfer-keyboard-panel .hyphen,
+.screen-frame.high-contrast .transfer-keyboard-panel .transfer-hyphen {
+  color: var(--high-contrast-structure-text);
+}
+
+/* 2) 주소 표 / 이사 가는 사람 표: top/left 선까지 전부 회색 */
+.screen-frame.high-contrast .transfer-info-table,
+.screen-frame.high-contrast .transfer-table-label,
+.screen-frame.high-contrast .transfer-table-value,
+.screen-frame.high-contrast .transfer-person-table,
+.screen-frame.high-contrast .transfer-person-head,
+.screen-frame.high-contrast .transfer-person-cell {
+  border-color: var(--high-contrast-structure-line);
+}
+
+/* 3) 추가신청 서비스의 큰 행 테두리 + 체크박스 외곽선 회색 */
+.screen-frame.high-contrast .transfer-extra-row,
+.screen-frame.high-contrast .fake-checkbox,
+.screen-frame.high-contrast .fake-radio {
+  border-color: var(--high-contrast-structure-line);
+}
+
+/* 체크된 상태는 내부 채움만 노랑으로 유지하고, 외곽선은 회색 유지 */
+.screen-frame.high-contrast .fake-checkbox.checked,
+.screen-frame.high-contrast .fake-radio.checked {
+  border-color: var(--high-contrast-structure-line);
+}
+
+
+/* 고대비: 구조를 감싸는 큰 외곽선은 회색, 선택/버튼 강조는 노랑 유지 */
+.screen-frame.high-contrast {
+  --hc-structure-line: #777777;
+}
+
+/* 메인 화면의 큰 카테고리 박스 외곽선 */
+.screen-frame.high-contrast .category-card {
+  border-color: var(--hc-structure-line) !important;
+}
+
+/* 전입신고 각 페이지의 제일 큰 카드 외곽선 */
+.screen-frame.high-contrast .transfer-card {
+  border-color: var(--hc-structure-line) !important;
+}
+
+/* 신청 정보 확인 페이지의 바깥 큰 카드 */
+.screen-frame.high-contrast .transfer-confirm-card {
+  border-color: var(--hc-structure-line) !important;
+}
+
+/* 신청 정보 확인 페이지 안의 4개 작은 요약 박스 */
+.screen-frame.high-contrast .transfer-confirm-card .transfer-summary-block,
+.screen-frame.high-contrast .transfer-summary-block {
+  border-color: var(--hc-structure-line) !important;
+}
+
+/* 4개 요약 박스 내부의 구분선도 너무 노랗게 튀면 회색으로 */
+.screen-frame.high-contrast .transfer-summary-block h4 {
+  border-bottom-color: var(--hc-structure-line) !important;
+}
+/* 주민등록등본(초본) + 고대비 */
+.screen-frame.high-contrast .resident-card,
+.screen-frame.high-contrast .resident-choice-button,
+.screen-frame.high-contrast .resident-option-button,
+.screen-frame.high-contrast .resident-check-row,
+.screen-frame.high-contrast .resident-summary-block,
+.screen-frame.high-contrast .resident-number-input,
+.screen-frame.high-contrast .resident-count-input {
+  border-color: var(--hc-structure-line, #777777);
+}
+
+.screen-frame.high-contrast .resident-card,
+.screen-frame.high-contrast .resident-choice-button,
+.screen-frame.high-contrast .resident-option-button,
+.screen-frame.high-contrast .resident-check-row,
+.screen-frame.high-contrast .resident-summary-block,
+.screen-frame.high-contrast .resident-number-input,
+.screen-frame.high-contrast .resident-count-input {
+  background: #000000;
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .resident-choice-button.selected,
+.screen-frame.high-contrast .resident-option-button.selected,
+.screen-frame.high-contrast .resident-check-row.selected {
+  background: #ffff00;
+  color: #000000;
+  border-color: #ffff00;
+  box-shadow: none;
+}
+
+.screen-frame.high-contrast .resident-card-title span,
+.screen-frame.high-contrast .resident-field-label span,
+.screen-frame.high-contrast .resident-sub-label span,
+.screen-frame.high-contrast .resident-hyphen,
+.screen-frame.high-contrast .resident-count-unit,
+.screen-frame.high-contrast .resident-summary-block h4,
+.screen-frame.high-contrast .resident-summary-block span,
+.screen-frame.high-contrast .resident-summary-block li {
+  color: #ffff00;
+}
+
+.screen-frame.high-contrast .resident-summary-block h4 {
+  border-bottom-color: var(--hc-structure-line, #777777) !important;
+}
+
+.screen-frame.high-contrast .resident-summary-block strong {
+  background: #000000;
+  color: #ffff00;
+  border-left-color: #ffff00;
+}
+
+.screen-frame.high-contrast .resident-summary-block li::marker,
+.screen-frame.high-contrast .resident-total-fee-text {
+  color: #ffff00 !important;
+}
+
+/* v2: 통합 선택 행 고대비 보정 */
+.screen-frame.high-contrast .transfer-option-button,
+.screen-frame.high-contrast .resident-option-button,
+.screen-frame.high-contrast .resident-check-row,
+.screen-frame.high-contrast .transfer-extra-row {
+  border-color: #777777;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: none;
+}
+
+.screen-frame.high-contrast .transfer-option-button.selected,
+.screen-frame.high-contrast .resident-option-button.selected,
+.screen-frame.high-contrast .resident-check-row.selected,
+.screen-frame.high-contrast .transfer-extra-row.selected {
+  border-color: #ffff00;
+  background: #ffff00;
+  color: #000000;
+  box-shadow: none;
+}
+
+.screen-frame.high-contrast .transfer-row-arrow {
+  color: #000000;
+}
+
