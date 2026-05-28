@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -22,16 +22,18 @@ IntentType = Literal[
     "unknown",
 ]
 
-# MCP Client 테스트 가이드 기준으로 프론트 화면 이동이 가능한 서비스만 허용한다.
-# 미지원 서비스는 serviceId=None 으로 반환한다.
+# v5 기준 허용 serviceId.
+# low confidence / 서비스 외 발화는 빈 문자열("")로 내려보낸다.
 ServiceIdType = Literal[
     "RESIDENT_REGISTRATION_COPY",
     "RESIDENT_REGISTRATION_ABSTRACT",
     "MOVE_IN_REPORT",
     "MOVE_OUT_REPORT",
+    "",
 ]
 
 SourceType = Literal["rule_based", "llm", "fallback", "mixed"]
+ConversationRole = Literal["user", "assistant", "system"]
 
 
 class HealthResponse(BaseModel):
@@ -39,6 +41,11 @@ class HealthResponse(BaseModel):
     app: str
     version: str
     model: str
+
+
+class ConversationMessage(BaseModel):
+    role: ConversationRole
+    content: str = Field(default="", max_length=2000)
 
 
 class BaseTextRequest(BaseModel):
@@ -53,6 +60,13 @@ class BaseTextRequest(BaseModel):
         if not value:
             raise ValueError("text must not be empty.")
         return value
+
+
+class ChatRequest(BaseTextRequest):
+    conversation_history: list[ConversationMessage] = Field(
+        default_factory=list,
+        description="이전 대화 기록. [{role: 'user'|'assistant', content: '...'}] 형식",
+    )
 
 
 class UserTypeResponse(BaseModel):
@@ -72,12 +86,29 @@ class ServiceRecommendResponse(BaseModel):
     success: bool
     fallback_used: bool
     intent: IntentType
-    serviceId: Optional[ServiceIdType] = None
+    serviceId: ServiceIdType
     confidence: float = Field(..., ge=0.0, le=1.0)
     answer: str
     source: SourceType
     raw_text: str
     model_name: str
+
+
+class ChatResponse(BaseModel):
+    task: Literal["chat"] = "chat"
+    success: bool
+    fallback_used: bool
+    intent: IntentType
+    serviceId: ServiceIdType
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    entities: dict[str, Any] = Field(default_factory=dict)
+    answer: str
+    conversation_history: list[ConversationMessage]
+    userType: UserType = "NORMAL"
+    userTypeConfidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    source: SourceType
+    raw_text: str = ""
+    model_name: str = ""
 
 
 class AnalyzeResponse(BaseModel):
@@ -90,7 +121,7 @@ class AnalyzeResponse(BaseModel):
     userTypeReason: str
 
     intent: IntentType
-    serviceId: Optional[ServiceIdType] = None
+    serviceId: ServiceIdType
     serviceConfidence: float = Field(..., ge=0.0, le=1.0)
     answer: str
 

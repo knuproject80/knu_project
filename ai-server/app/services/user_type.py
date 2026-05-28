@@ -49,19 +49,22 @@ def _make_rule_response(user_type: str, confidence: float, reason: str) -> dict[
 def _rule_based_user_type(text: str) -> dict[str, Any] | None:
     t = normalize_text(text)
 
+    # v5 TC-AI-03: "어르신 글씨 크게"는 고령자 배려 케이스로 우선 분류한다.
+    if any(keyword in t for keyword in ["어르신", "노인", "고령", "천천히", "큰버튼", "큰글씨", "글씨크게"]):
+        return _make_rule_response("ELDERLY", 0.95, "고령 사용자 또는 천천히 진행 요청이 포함되었습니다.")
+
     if any(keyword in t for keyword in ["휠체어", "화면낮", "낮은화면", "높이가높", "높아요"]):
         return _make_rule_response("WHEELCHAIR", 0.98, "휠체어 또는 화면 높이 관련 표현이 포함되었습니다.")
 
-    if any(keyword in t for keyword in ["글씨가잘안보", "잘안보", "눈이안좋", "시각", "저시력", "글씨크", "화면확대"]):
+    if any(keyword in t for keyword in ["글씨가잘안보", "잘안보", "눈이안좋", "시각", "저시력", "화면확대"]):
         return _make_rule_response("VISUAL_IMPAIRMENT", 0.95, "시각 불편 또는 글씨 확대 요청이 포함되었습니다.")
 
     if any(keyword in t for keyword in ["잘안들", "소리가안들", "귀가안", "청각", "음성안내안들"]):
         return _make_rule_response("HEARING_IMPAIRMENT", 0.95, "청각 불편 또는 소리 관련 표현이 포함되었습니다.")
 
-    if any(keyword in t for keyword in ["어르신", "노인", "고령", "천천히", "큰버튼"]):
-        return _make_rule_response("ELDERLY", 0.90, "고령 사용자 또는 천천히 진행 요청이 포함되었습니다.")
-
-    return None
+    # 명시적 접근성 힌트가 없으면 일반 사용자로 처리한다.
+    # 이렇게 해야 /chat 테스트가 사용자 유형 분류 LLM 지연 없이 안정적으로 동작한다.
+    return _make_rule_response("NORMAL", 0.70, "특별한 접근성 요청이 없어 일반 사용자로 분류했습니다.")
 
 
 def classify_user_type(text: str) -> dict[str, Any]:

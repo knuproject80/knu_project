@@ -10,11 +10,14 @@ from app.model import model_instance
 from app.schemas import (
     AnalyzeResponse,
     BaseTextRequest,
+    ChatRequest,
+    ChatResponse,
     HealthResponse,
     ServiceRecommendResponse,
     UserTypeResponse,
 )
 from app.services.analyze import analyze_text
+from app.services.chat import chat_text
 from app.services.service_recommend import recommend_service
 from app.services.user_type import classify_user_type
 
@@ -60,6 +63,21 @@ def health() -> HealthResponse:
     )
 
 
+@app.post("/chat", response_model=ChatResponse)
+def chat_endpoint(req: ChatRequest) -> ChatResponse:
+    """v5 MCP Client 연동용 엔드포인트.
+
+    의도 분류 결과와 함께 음성 안내용 자연어 answer 및 업데이트된 conversation_history를 반환한다.
+    """
+    result = chat_text(
+        req.text,
+        session_id=req.session_id,
+        locale=req.locale,
+        conversation_history=req.conversation_history,
+    )
+    return ChatResponse(**result)
+
+
 @app.post("/classify/user-type", response_model=UserTypeResponse)
 def classify_user_type_endpoint(req: BaseTextRequest) -> UserTypeResponse:
     return UserTypeResponse(**classify_user_type(req.text))
@@ -67,6 +85,10 @@ def classify_user_type_endpoint(req: BaseTextRequest) -> UserTypeResponse:
 
 @app.post("/classify/service", response_model=ServiceRecommendResponse)
 def classify_service_endpoint(req: BaseTextRequest) -> ServiceRecommendResponse:
+    """하위 호환용 엔드포인트.
+
+    v5 기준 MCP Client는 /chat을 사용하지만, 기존 테스트/디버깅을 위해 유지한다.
+    """
     return ServiceRecommendResponse(**recommend_service(req.text))
 
 
