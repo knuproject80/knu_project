@@ -43,19 +43,34 @@ SERVICE_RECOMMEND_JSON_SCHEMA = {
                 ],
             },
             "serviceId": {
-                "type": ["string", "null"],
+                "type": "string",
                 "enum": [
                     "RESIDENT_REGISTRATION_COPY",
                     "RESIDENT_REGISTRATION_ABSTRACT",
                     "MOVE_IN_REPORT",
                     "MOVE_OUT_REPORT",
-                    None,
+                    "",
                 ],
             },
             "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
             "answer": {"type": "string"},
         },
         "required": ["intent", "serviceId", "confidence", "answer"],
+        "additionalProperties": False,
+    },
+    "strict": True,
+}
+
+
+CHAT_JSON_SCHEMA = {
+    "type": "json_schema",
+    "name": "chat_response",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "string"},
+        },
+        "required": ["answer"],
         "additionalProperties": False,
     },
     "strict": True,
