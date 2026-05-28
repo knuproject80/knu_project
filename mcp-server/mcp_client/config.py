@@ -30,6 +30,7 @@ IDLE_WARNING_SEC = 45
 # AI 서버 설정
 AI_SERVER_BASE_URL = "http://127.0.0.1:8000"
 AI_SERVER_TIMEOUT_SEC = 5
+AI_SERVER_CHAT_TIMEOUT_SEC = 10 # /chat은 AI 생성 포함으로 /classify보다 응답이 느림
 
 # VOICE_GUIDE 관련
 VOICE_GUIDE_ENABLED = True          # MCP 서버 미연결 시 False로 끄기 용도
