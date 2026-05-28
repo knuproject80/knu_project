@@ -21,12 +21,21 @@ class SessionState(Enum):
 
 @dataclass
 class Session:
-    session_id: str
-    user_type: str
-    service_id: int | None = None
-    state: SessionState = SessionState.WAITING
-    created_at: float = field(default_factory=time.time)
-    last_activity: float = field(default_factory=time.time)
+    """
+    변경 이력
+    ─────────────────────────────────────────────────────────
+    - conversation_history 필드 추가
+      · AI /chat 호출 시 누적 대화 기록을 세션에 보관
+      · main.py의 get_history / update_history 메서드에서 참조
+    ─────────────────────────────────────────────────────────
+    """
+    session_id:           str
+    user_type:            str
+    service_id:           int | None        = None
+    state:                SessionState       = SessionState.WAITING
+    created_at:           float              = field(default_factory=time.time)
+    last_activity:        float              = field(default_factory=time.time)
+    conversation_history: list               = field(default_factory=list)  # 추가
 
     def touch(self):
         """활동 시각 갱신"""
@@ -41,13 +50,23 @@ class Session:
 
 
 class SessionManager:
-    """활성 세션을 추적하고 만료 세션을 자동 정리한다."""
+    """
+    활성 세션을 추적하고 만료 세션을 자동 정리한다.
+
+    변경 이력
+    ─────────────────────────────────────────────────────────
+    - create(): conversation_history 파라미터 추가
+    - get_history(): 세션 대화 기록 조회 메서드 추가
+    - update_history(): 세션 대화 기록 갱신 메서드 추가
+    ─────────────────────────────────────────────────────────
+    """
 
     def __init__(self):
         self._sessions: dict[str, Session] = {}
         self._cleanup_task: asyncio.Task | None = None
 
     # ── 생명주기 ────────────────────────────────
+
     def start(self):
         """백그라운드 정리 루프 시작 (이벤트 루프 내에서 호출)"""
         if self._cleanup_task is None:
@@ -65,8 +84,23 @@ class SessionManager:
         logger.info("세션 매니저 종료")
 
     # ── 세션 CRUD ───────────────────────────────
-    def create(self, session_id: str, user_type: str) -> Session:
-        session = Session(session_id=session_id, user_type=user_type)
+
+    def create(
+        self,
+        session_id: str,
+        user_type: str,
+        conversation_history: list | None = None,  # 추가
+    ) -> Session:
+        """
+        세션 생성.
+        conversation_history를 초기값으로 받을 수 있다.
+        VOICE_INPUT 시점에 AI /chat이 반환한 대화 기록을 여기서 저장한다.
+        """
+        session = Session(
+            session_id=session_id,
+            user_type=user_type,
+            conversation_history=list(conversation_history or []),
+        )
         self._sessions[session_id] = session
         logger.info("세션 생성: %s (유형: %s)", session_id, user_type)
         return session
@@ -109,7 +143,46 @@ class SessionManager:
         if removed:
             logger.info("세션 제거: %s (상태: %s)", session_id, removed.state.value)
 
+    # ── 대화 기록 관리 ───────────────────────────
+
+    def get_history(self, session_id: str) -> list:
+        """
+        세션의 누적 대화 기록을 반환한다.
+        main.py의 _handle_step_with_ai에서 AI /chat 호출 시 전달한다.
+        세션이 없으면 빈 리스트를 반환한다.
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            logger.debug("get_history: 세션 없음 — session_id=%s", session_id)
+            return []
+        return session.conversation_history
+
+    def update_history(self, session_id: str, history: list) -> None:
+        """
+        AI /chat 응답의 conversation_history로 세션 기록을 갱신한다.
+        main.py의 _handle_step_with_ai / _execute_service에서 호출한다.
+        세션이 없거나 history가 list가 아니면 경고 후 무시한다.
+        """
+        if not isinstance(history, list):
+            logger.warning(
+                "update_history: list가 아닌 타입 무시 — session_id=%s type=%s",
+                session_id, type(history).__name__,
+            )
+            return
+
+        session = self._sessions.get(session_id)
+        if session is None:
+            logger.debug("update_history: 세션 없음 — session_id=%s", session_id)
+            return
+
+        session.conversation_history = history
+        logger.debug(
+            "대화 기록 갱신: session_id=%s 길이=%d",
+            session_id, len(history),
+        )
+
     # ── 조회 ────────────────────────────────────
+
     @property
     def active_count(self) -> int:
         return sum(1 for s in self._sessions.values()
@@ -120,7 +193,7 @@ class SessionManager:
                 if s.state in (SessionState.WAITING, SessionState.ACTIVE)]
 
     # ── 만료 콜백 (main에서 등록) ────────────────
-    # 만료된 세션 처리를 외부에서 주입할 수 있도록 콜백 제공
+
     _on_timeout_callback = None
 
     def set_timeout_callback(self, callback):
@@ -128,6 +201,7 @@ class SessionManager:
         self._on_timeout_callback = callback
 
     # ── 백그라운드 정리 ─────────────────────────
+
     async def _cleanup_loop(self):
         """주기적으로 만료 세션을 정리"""
         while True:
@@ -144,7 +218,7 @@ class SessionManager:
                 logger.warning(
                     "세션 타임아웃: %s (서비스: %s, 경과: %.0f초)",
                     sid, session.service_id,
-                    now - session.created_at
+                    now - session.created_at,
                 )
                 if self._on_timeout_callback:
                     try:
@@ -163,5 +237,5 @@ class SessionManager:
             if expired_ids or done_ids:
                 logger.info(
                     "세션 정리 완료 — 만료: %d, 제거: %d, 잔여 활성: %d",
-                    len(expired_ids), len(done_ids), self.active_count
+                    len(expired_ids), len(done_ids), self.active_count,
                 )
