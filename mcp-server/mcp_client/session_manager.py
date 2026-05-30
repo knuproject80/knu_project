@@ -27,6 +27,10 @@ class Session:
     - conversation_history 필드 추가
       · AI /chat 호출 시 누적 대화 기록을 세션에 보관
       · main.py의 get_history / update_history 메서드에서 참조
+    - prefilled 필드 추가 (v6.0)
+      · AI /chat이 추출한 entities를 보관
+      · STEP_CHANGE 수신 시 해당 단계가 이미 채워졌는지 판단하는 데 사용
+      · main.py의 set_prefilled / is_step_prefilled / get_prefilled_value 메서드에서 참조
     ─────────────────────────────────────────────────────────
     """
     session_id:           str
@@ -35,7 +39,8 @@ class Session:
     state:                SessionState       = SessionState.WAITING
     created_at:           float              = field(default_factory=time.time)
     last_activity:        float              = field(default_factory=time.time)
-    conversation_history: list               = field(default_factory=list)  # 추가
+    conversation_history: list               = field(default_factory=list)
+    prefilled:            dict               = field(default_factory=dict)   # v6.0 추가
 
     def touch(self):
         """활동 시각 갱신"""
@@ -58,8 +63,19 @@ class SessionManager:
     - create(): conversation_history 파라미터 추가
     - get_history(): 세션 대화 기록 조회 메서드 추가
     - update_history(): 세션 대화 기록 갱신 메서드 추가
+    - set_prefilled(): AI entities를 세션에 저장 (v6.0)
+    - is_step_prefilled(): 특정 step이 이미 채워졌는지 확인 (v6.0)
+    - get_prefilled_value(): 특정 step의 prefilled 값 반환 (v6.0)
+    - clear_prefilled_field(): 특정 step의 prefilled 값 초기화 (v6.0)
     ─────────────────────────────────────────────────────────
     """
+
+    # step 키 → entities 필드 매핑 (v6.0)
+    # STEP_CHANGE 수신 시 어느 entities 필드와 대응되는지 결정한다.
+    _STEP_TO_ENTITY: dict[str, str] = {
+        "CERTIFICATE_SELECT_COUNT":   "count",
+        "CERTIFICATE_SELECT_SCOPE":   "scope",
+    }
 
     def __init__(self):
         self._sessions: dict[str, Session] = {}
@@ -180,6 +196,129 @@ class SessionManager:
             "대화 기록 갱신: session_id=%s 길이=%d",
             session_id, len(history),
         )
+
+    # ── prefilled 관리 (v6.0) ────────────────────
+
+    def set_prefilled(self, session_id: str, entities: dict) -> None:
+        """
+        AI /chat이 추출한 entities를 세션에 저장한다. (v6.0)
+
+        VOICE_INPUT → AI /chat 응답 수신 직후 _handle_voice에서 호출한다.
+        entities의 null 값은 저장하지 않아 is_step_prefilled가 False를 반환하도록 한다.
+
+        Parameters
+        ----------
+        session_id : str
+        entities : dict
+            예: {"count": 1, "paymentMethod": "CASH", "purpose": None, "scope": None}
+            null/None 값은 필터링하여 저장하지 않는다.
+        """
+        if not isinstance(entities, dict):
+            logger.warning(
+                "set_prefilled: dict가 아닌 타입 무시 — session_id=%s type=%s",
+                session_id, type(entities).__name__,
+            )
+            return
+
+        session = self._sessions.get(session_id)
+        if session is None:
+            logger.debug("set_prefilled: 세션 없음 — session_id=%s", session_id)
+            return
+
+        # None / 빈 문자열은 저장하지 않음 — is_step_prefilled가 False 반환하도록
+        filtered = {k: v for k, v in entities.items() if v is not None and v != ""}
+        session.prefilled = filtered
+        logger.info(
+            "prefilled 저장: session_id=%s fields=%s",
+            session_id, list(filtered.keys()),
+        )
+
+    def is_step_prefilled(self, session_id: str, step: str) -> bool:
+        """
+        해당 step에 대응하는 entity가 이미 채워졌는지 확인한다. (v6.0)
+
+        _STEP_TO_ENTITY 매핑에 없는 step은 항상 False를 반환한다.
+        (전입신고 단계처럼 prefilled 대상이 아닌 step은 스킵하지 않는다.)
+
+        Parameters
+        ----------
+        session_id : str
+        step : str
+            예: "CERTIFICATE_SELECT_COUNT"
+
+        Returns
+        -------
+        bool
+            True이면 main.py에서 AI 호출 없이 autoAdvance 처리한다.
+        """
+        entity_key = self._STEP_TO_ENTITY.get(step)
+        if entity_key is None:
+            return False  # 매핑 없는 step → 스킵 대상 아님
+
+        session = self._sessions.get(session_id)
+        if session is None:
+            return False
+
+        return entity_key in session.prefilled
+
+    def get_prefilled_value(self, session_id: str, step: str):
+        """
+        해당 step의 prefilled 값을 반환한다. (v6.0)
+
+        is_step_prefilled() 확인 후 호출하는 것을 권장한다.
+        매핑이 없거나 세션이 없으면 None을 반환한다.
+
+        Parameters
+        ----------
+        session_id : str
+        step : str
+
+        Returns
+        -------
+        Any | None
+            저장된 값 (예: 1, "CASH") 또는 None
+        """
+        entity_key = self._STEP_TO_ENTITY.get(step)
+        if entity_key is None:
+            return None
+
+        session = self._sessions.get(session_id)
+        if session is None:
+            return None
+
+        return session.prefilled.get(entity_key)
+
+    def clear_prefilled_field(self, session_id: str, step: str) -> None:
+        """
+        특정 step의 prefilled 값을 초기화한다. (v6.0)
+
+        사용자가 자동입력된 값을 재발화로 수정하려 할 때 호출한다.
+        예: "매수 변경해줘" → CERTIFICATE_SELECT_COUNT prefilled 초기화
+
+        Parameters
+        ----------
+        session_id : str
+        step : str
+            초기화할 step 키
+        """
+        entity_key = self._STEP_TO_ENTITY.get(step)
+        if entity_key is None:
+            logger.debug(
+                "clear_prefilled_field: 매핑 없는 step — session_id=%s step=%s",
+                session_id, step,
+            )
+            return
+
+        session = self._sessions.get(session_id)
+        if session is None:
+            return
+
+        removed = session.prefilled.pop(entity_key, None)
+        if removed is not None:
+            logger.info(
+                "prefilled 초기화: session_id=%s step=%s (이전 값: %s)",
+                session_id, step, removed,
+            )
 
     # ── 조회 ────────────────────────────────────
 

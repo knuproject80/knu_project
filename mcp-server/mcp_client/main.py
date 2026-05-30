@@ -48,9 +48,10 @@ GUIDE_TEXT = {
     },
 
     # ── 주민등록등본 발급 (serviceId: 102) ──────────────────
+    # 실제 단계 순서: RRN → SCOPE → COUNT → CONFIRM → PRINTING → COMPLETE
     "CERTIFICATE_SELECT_RRN": {
         "NORMAL":     "주민등록번호를 입력해 주세요.",
-        "ELDERLY":    "주민등록번호를 입력해 주세요.",
+        "ELDERLY":    "주민등록번호 앞자리와 뒷자리를 천천히 입력해 주세요.",
         "WHEELCHAIR": "주민등록번호를 입력해 주세요.",
     },
     "CERTIFICATE_SELECT_SCOPE": {
@@ -143,20 +144,21 @@ def _step_to_prompt(step: str, user_type: str) -> str:
     AI가 어느 화면·단계인지 파악할 수 있도록 충분한 컨텍스트를 제공한다.
     """
     step_descriptions = {
-        # 주민등록등본 발급
-        "CERTIFICATE_SELECT_RRN":   "주민등록번호 입력 화면에 진입했습니다.",
-        "CERTIFICATE_SELECT_SCOPE": "발급 형태(등본/초본) 선택 화면에 진입했습니다.",
-        "CERTIFICATE_SELECT_COUNT": "발급 매수 선택 화면에 진입했습니다.",
-        "CERTIFICATE_CONFIRM":      "발급 내용 최종 확인 화면에 진입했습니다.",
-        "CERTIFICATE_PRINTING":     "등본 출력이 시작되었습니다.",
-        "CERTIFICATE_COMPLETE":     "등본 출력이 완료되었습니다.",
+        # 주민등록등본 발급 (실제 단계 순서)
+        # 1.주민번호입력 -> 2.발급형태 -> 3.발급매수 -> 4.확인 -> 5.출력 -> 6.완료
+        "CERTIFICATE_SELECT_RRN":     "주민등록번호 입력 화면에 진입했습니다. 주민등록번호 13자리를 입력해 주세요.",
+        "CERTIFICATE_SELECT_SCOPE":   "발급 형태(등본/초본) 선택 화면에 진입했습니다.",
+        "CERTIFICATE_SELECT_COUNT":   "발급 매수 선택 화면에 진입했습니다.",
+        "CERTIFICATE_CONFIRM":        "발급 내용 최종 확인 화면에 진입했습니다.",
+        "CERTIFICATE_PRINTING":       "등본 출력이 시작되었습니다.",
+        "CERTIFICATE_COMPLETE":       "등본 출력이 완료되었습니다.",
         # 전입신고
-        "MOVEIN_INPUT_PREV_ADDRESS": "이전 주소 입력 화면에 진입했습니다.",
-        "MOVEIN_INPUT_NEW_ADDRESS":  "새 주소 입력 화면에 진입했습니다.",
-        "MOVEIN_SELECT_DATE":        "전입일 선택 화면에 진입했습니다.",
-        "MOVEIN_INPUT_MEMBERS":      "전입 세대원 정보 입력 화면에 진입했습니다.",
-        "MOVEIN_CONFIRM":            "전입신고 내용 최종 확인 화면에 진입했습니다.",
-        "MOVEIN_COMPLETE":           "전입신고가 완료되었습니다.",
+        "MOVEIN_INPUT_PREV_ADDRESS":  "이전 주소 입력 화면에 진입했습니다.",
+        "MOVEIN_INPUT_NEW_ADDRESS":   "새 주소 입력 화면에 진입했습니다.",
+        "MOVEIN_SELECT_DATE":         "전입일 선택 화면에 진입했습니다.",
+        "MOVEIN_INPUT_MEMBERS":       "전입 세대원 정보 입력 화면에 진입했습니다.",
+        "MOVEIN_CONFIRM":             "전입신고 내용 최종 확인 화면에 진입했습니다.",
+        "MOVEIN_COMPLETE":            "전입신고가 완료되었습니다.",
     }
     description = step_descriptions.get(step, f"{step} 단계에 진입했습니다.")
     user_type_hint = {
@@ -188,6 +190,15 @@ class KioskMainController:
     - GUIDE_TEXT 딕셔너리: AI 호출 실패 시 폴백 전용으로 역할 축소
     - SessionManager: conversation_history 저장/조회 지원 가정
       (sessions.get_history / sessions.update_history)
+    ─────────────────────────────────────────────────────────
+    v6.0 추가
+    ─────────────────────────────────────────────────────────
+    - _handle_voice: AI entities 추출 후 sessions.set_prefilled() 호출
+    - _on_step_change: prefilled 단계 여부를 먼저 확인
+      · prefilled → _send_auto_advance() (AI/MCP 호출 없이 autoAdvance 전송)
+      · 미충족   → _handle_step_with_ai() (기존 AI 호출 흐름)
+    - _send_auto_advance: autoAdvance=True VOICE_GUIDE 전송 신규 메서드
+      · ELDERLY 모드는 짧은 확인 음성(autoAdvanceGuide) 포함
     ─────────────────────────────────────────────────────────
     """
 
@@ -312,6 +323,11 @@ class KioskMainController:
         ai_answer = ai_res.get("answer", "")
         conversation_history = ai_res.get("conversation_history", [])
 
+        # ── 3-1. entities 추출 (v6.0) ────────────────────────────────
+        # AI 서버가 반환한 entities를 raw 응답에서 직접 읽는다.
+        # IntentAnalyzer는 entities를 가공하지 않으므로 ai_raw에서 추출한다.
+        entities: dict = ai_raw.get("entities", {}) if isinstance(ai_raw, dict) else {}
+
         logger.info(
             "AI 응답 수신: intent=%s serviceId=%s confidence=%.2f answer=%.40s…",
             ai_res.get("intent"), ai_res.get("serviceId"),
@@ -339,6 +355,7 @@ class KioskMainController:
             service_id,
             session_start_text=ai_answer,
             conversation_history=conversation_history,
+            entities=entities,                      # v6.0: prefilled 저장용
         )
 
     # ── 터치 입력 처리 ───────────────────────────
@@ -363,9 +380,12 @@ class KioskMainController:
         service_id: int,
         session_start_text: str = "",           # AI answer (없으면 GUIDE_TEXT 폴백)
         conversation_history: list | None = None,
+        entities: dict | None = None,           # v6.0: AI가 추출한 prefilled 필드
     ):
         if conversation_history is None:
             conversation_history = []
+        if entities is None:
+            entities = {}
 
         # ── 1. start_session ────────────────────
         try:
@@ -387,6 +407,11 @@ class KioskMainController:
         self.sessions.create(session_id, self.current_user_type)
         if conversation_history:
             self.sessions.update_history(session_id, conversation_history)
+
+        # ── 1-1. prefilled entities 세션 저장 (v6.0) ──────────────
+        # None/빈 값 필터링은 session_manager.set_prefilled 내부에서 처리
+        if entities:
+            self.sessions.set_prefilled(session_id, entities)
 
         # ── 2. voice_guide — SESSION_START ───────
         # AI answer 우선 사용, 없으면 GUIDE_TEXT 폴백
@@ -513,6 +538,85 @@ class KioskMainController:
         )
 
     # ══════════════════════════════════════════════
+    #  autoAdvance 전송 (prefilled 단계 스킵) v6.0
+    # ══════════════════════════════════════════════
+
+    async def _send_auto_advance(
+        self,
+        session_id: str,
+        step: str,
+        prefilled_value,
+    ):
+        """
+        AI 서버가 발화에서 미리 추출한 값이 있는 단계에 대해,
+        AI /chat 및 MCP voice_guide 호출 없이 Frontend에 autoAdvance 신호를 전송한다.
+
+        ELDERLY 모드에서는 즉시 스킵하지 않고 짧은 확인 음성(autoAdvanceGuide)을
+        포함하여 전송한다. Frontend는 TTS 완료 후 다음 단계로 진행해야 한다.
+
+        Parameters
+        ----------
+        session_id : str
+        step : str
+            prefilled로 판정된 STEP_CHANGE 키
+        prefilled_value : Any
+            세션에 저장된 해당 step의 값 (예: 1, "CASH")
+        """
+        user_type = self.current_user_type
+
+        # ELDERLY 모드: 확인 음성 문구 생성 (즉시 스킵 금지)
+        auto_advance_guide = ""
+        if user_type == "ELDERLY":
+            auto_advance_guide = self._make_elderly_auto_advance_guide(
+                step, prefilled_value
+            )
+
+        self.ui.send_command(
+            session_id,
+            "VOICE_GUIDE",
+            {
+                "context":           step,
+                "guideText":         "",             # 스킵 단계는 안내 문구 없음
+                "autoAdvance":       True,           # Frontend에 즉시 다음 단계 신호
+                "prefilledValue":    prefilled_value, # UI 자동 입력값
+                "autoAdvanceGuide":  auto_advance_guide,  # ELDERLY 전용 확인 음성
+                "audioUrl":          None,
+                "lang":              "ko-KR",
+                "userType":          user_type,
+            },
+            wait_ack=False,
+        )
+        logger.info(
+            "autoAdvance 전송 — session_id=%s step=%s value=%s elderly_guide=%.40s…",
+            session_id, step, prefilled_value, auto_advance_guide,
+        )
+
+    @staticmethod
+    def _make_elderly_auto_advance_guide(step: str, value) -> str:
+        """
+        ELDERLY 모드 자동입력 확인 문구를 반환한다.
+
+        step별로 사람이 이해하기 쉬운 문구를 생성하며,
+        매핑이 없는 step은 범용 문구로 대체한다.
+
+        Parameters
+        ----------
+        step : str
+        value : Any
+            prefilled_value (표시용)
+
+        Returns
+        -------
+        str
+            TTS로 읽어줄 확인 문구
+        """
+        templates: dict[str, str] = {
+            "CERTIFICATE_SELECT_COUNT":   f"{value}부로 자동 설정했습니다.",
+            "CERTIFICATE_SELECT_SCOPE":   f"공개 범위를 {value}(으)로 자동 설정했습니다.",
+        }
+        return templates.get(step, f"{value}(으)로 자동 설정했습니다.")
+
+    # ══════════════════════════════════════════════
     #  음성 안내 공통 헬퍼
     # ══════════════════════════════════════════════
 
@@ -624,10 +728,14 @@ class KioskMainController:
         """
         프론트 → STOMP STEP_CHANGE 수신.
 
-        변경사항:
-          기존: GUIDE_TEXT 딕셔너리 직접 조회 → MCP voice_guide 전달
-          변경: AI /chat 호출(_handle_step_with_ai) → answer → MCP voice_guide 전달
-               AI 실패 시 GUIDE_TEXT 폴백은 _handle_step_with_ai 내부에서 처리
+        v6.0 변경사항:
+          1. prefilled 확인 먼저 수행
+             · 채워진 단계 → _send_auto_advance (AI/MCP 호출 없이 autoAdvance 전송)
+             · 미충족 단계 → _handle_step_with_ai (기존 AI /chat 호출 흐름)
+          2. 기존 흐름:
+             GUIDE_TEXT 딕셔너리 직접 조회 → MCP voice_guide 전달
+             변경: AI /chat 호출(_handle_step_with_ai) → answer → MCP voice_guide 전달
+                  AI 실패 시 GUIDE_TEXT 폴백은 _handle_step_with_ai 내부에서 처리
         """
         data = payload.get("data", {})
         session_id = data.get("sessionId")
@@ -640,11 +748,24 @@ class KioskMainController:
         self.sessions.touch(session_id)  # 활동 시각 갱신
 
         if self._loop and not self._loop.is_closed():
-            self._loop.call_soon_threadsafe(
-                lambda: self._loop.create_task(
-                    self._handle_step_with_ai(session_id, step)  # AI 호출로 교체
+            # v6.0: prefilled 여부에 따라 처리 경로 분기
+            if self.sessions.is_step_prefilled(session_id, step):
+                prefilled_value = self.sessions.get_prefilled_value(session_id, step)
+                logger.info(
+                    "prefilled 스킵: session_id=%s step=%s value=%s",
+                    session_id, step, prefilled_value,
                 )
-            )
+                self._loop.call_soon_threadsafe(
+                    lambda: self._loop.create_task(
+                        self._send_auto_advance(session_id, step, prefilled_value)
+                    )
+                )
+            else:
+                self._loop.call_soon_threadsafe(
+                    lambda: self._loop.create_task(
+                        self._handle_step_with_ai(session_id, step)
+                    )
+                )
         else:
             logger.error("STEP_CHANGE 수신 시 asyncio 루프 없음 — 처리 불가")
 
