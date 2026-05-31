@@ -2,7 +2,9 @@
 import asyncio
 import logging
 from mcp import ClientSession
+import json
 from mcp.client.stdio import stdio_client, StdioServerParameters
+from mcp.types import CallToolResult
 import config
 
 logger = logging.getLogger(__name__)
@@ -138,7 +140,8 @@ class MCPToolManager:
                         await self.connect()
 
                     raw_result = await self._session.call_tool(tool_name, arguments)
-                    return self._validate_result(tool_name, raw_result, required_fields)
+                    result_dict = self._parse_call_tool_result(tool_name, raw_result)
+                    return self._validate_result(tool_name, result_dict, required_fields)
 
                 except MCPError:
                     raise
@@ -159,8 +162,65 @@ class MCPToolManager:
             )
 
     # ══════════════════════════════════════════════
-    #  응답 검증
+    #  응답 파싱 / 검증
     # ══════════════════════════════════════════════
+
+    @staticmethod
+    def _parse_call_tool_result(tool_name: str, raw: CallToolResult) -> dict:
+        """
+        MCP SDK call_tool() 반환값(CallToolResult)을 dict로 변환한다.
+
+        mcp_server.py는 도구 결과를
+          [TextContent(type="text", text=json.dumps(result))]
+        형태로 반환한다. 이를 파싱해 dict를 복원한다.
+
+        Raises
+        ------
+        MCPError : isError=True, content 비어있음, JSON 파싱 실패, 서버 측 error 키 포함
+        """
+        if raw is None:
+            raise MCPError(f"MCP '{tool_name}' 응답이 None입니다.")
+
+        if not isinstance(raw, CallToolResult):
+            raise MCPError(
+                f"MCP '{tool_name}' 예상치 못한 응답 타입: "
+                f"{type(raw).__name__}"
+            )
+
+        if raw.isError:
+            # 서버가 isError=True로 명시적 오류를 반환한 경우
+            err_text = raw.content[0].text if raw.content else "(내용 없음)"
+            raise MCPError(f"MCP '{tool_name}' 서버 오류: {err_text}")
+
+        if not raw.content:
+            raise MCPError(f"MCP '{tool_name}' 응답 content가 비어있습니다.")
+
+        first = raw.content[0]
+        if not hasattr(first, "text"):
+            raise MCPError(
+                f"MCP '{tool_name}' content[0]에 text 필드 없음: "
+                f"{type(first).__name__}"
+            )
+
+        try:
+            result_dict = json.loads(first.text)
+        except json.JSONDecodeError as e:
+            raise MCPError(
+                f"MCP '{tool_name}' JSON 파싱 실패: {e} "
+                f"(raw: {first.text[:200]})"
+            ) from e
+
+        if not isinstance(result_dict, dict):
+            raise MCPError(
+                f"MCP '{tool_name}' 파싱 결과가 dict가 아닙니다: "
+                f"{type(result_dict).__name__}"
+            )
+
+        # mcp_server.py가 오류 시 {"error": "..."} 형태로 반환
+        if "error" in result_dict:
+            raise MCPError(f"MCP '{tool_name}' 서버 오류: {result_dict['error']}")
+
+        return result_dict
 
     @staticmethod
     def _validate_result(
@@ -168,15 +228,6 @@ class MCPToolManager:
         raw_result,
         required_fields: list[str] | None,
     ) -> dict:
-        if raw_result is None:
-            raise MCPError(f"MCP '{tool_name}' 응답이 None입니다.")
-
-        if not isinstance(raw_result, dict):
-            raise MCPError(
-                f"MCP '{tool_name}' 응답이 dict가 아닙니다: "
-                f"type={type(raw_result).__name__}, value={str(raw_result)[:200]}"
-            )
-
         if required_fields:
             missing = [f for f in required_fields if f not in raw_result]
             if missing:
