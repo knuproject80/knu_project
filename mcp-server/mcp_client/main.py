@@ -48,7 +48,12 @@ GUIDE_TEXT = {
     },
 
     # ── 주민등록등본 발급 (serviceId: 102) ──────────────────
-    # 실제 단계 순서: RRN → SCOPE → COUNT → CONFIRM → PRINTING → COMPLETE
+    # 실제 단계 순서: PURPOSE → RRN → SCOPE → COUNT → CONFIRM → PRINTING → COMPLETE
+    "CERTIFICATE_SELECT_PURPOSE": {
+        "NORMAL":     "발급할 증명서 종류를 선택해 주세요.",
+        "ELDERLY":    "발급받으실 증명서 종류를 선택해 주세요.",
+        "WHEELCHAIR": "발급할 증명서 종류를 선택해 주세요.",
+    },
     "CERTIFICATE_SELECT_RRN": {
         "NORMAL":     "주민등록번호를 입력해 주세요.",
         "ELDERLY":    "주민등록번호 앞자리와 뒷자리를 천천히 입력해 주세요.",
@@ -65,9 +70,9 @@ GUIDE_TEXT = {
         "WHEELCHAIR": "발급 매수를 선택해 주세요.",
     },
     "CERTIFICATE_CONFIRM": {
-        "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
-        "ELDERLY":    "내용을 천천히 확인해 주세요. 맞으시면 발급 버튼을 눌러 주세요.",
-        "WHEELCHAIR": "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
+        "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
+        "ELDERLY":    "내용을 천천히 확인해 주세요. 맞으시면 제출 버튼을 눌러 주세요.",
+        "WHEELCHAIR": "입력하신 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
     },
     "CERTIFICATE_PRINTING": {
         "NORMAL":     "출력 중입니다. 잠시 기다려 주세요.",
@@ -81,30 +86,40 @@ GUIDE_TEXT = {
     },
 
     # ── 전입신고 (serviceId: 101) ────────────────────────────
+    "MOVEIN_INPUT_BASIC_INFO": {
+        "NORMAL":     "본인확인 및 기본정보를 입력해 주세요.",
+        "ELDERLY":    "본인확인 및 기본정보를 천천히 입력해 주세요.",
+        "WHEELCHAIR": "본인확인 및 기본정보를 입력해 주세요.",
+    },
+    "MOVEIN_SELECT_REASON": {
+        "NORMAL":     "전입사유를 선택해 주세요.",
+        "ELDERLY":    "이사 오신 사유를 선택해 주세요.",
+        "WHEELCHAIR": "전입사유를 선택해 주세요.",
+    },
     "MOVEIN_INPUT_PREV_ADDRESS": {
-        "NORMAL":     "이전 주소를 입력해 주세요.",
-        "ELDERLY":    "이사 오시기 전 살던 주소를 입력해 주세요.",
-        "WHEELCHAIR": "이전 주소를 입력해 주세요.",
+        "NORMAL":     "이사 전 주소를 확인하고, 이사 가는 사람을 선택해 주세요.",
+        "ELDERLY":    "이사 오시기 전 살던 주소를 확인하고, 이사 가는 분을 선택해 주세요.",
+        "WHEELCHAIR": "이사 전 주소를 확인하고, 이사 가는 사람을 선택해 주세요.",
     },
     "MOVEIN_INPUT_NEW_ADDRESS": {
-        "NORMAL":     "새로운 주소를 입력해 주세요.",
+        "NORMAL":     "이사 후 주소를 입력해 주세요.",
         "ELDERLY":    "이사 오신 새 주소를 입력해 주세요.",
-        "WHEELCHAIR": "새로운 주소를 입력해 주세요.",
+        "WHEELCHAIR": "이사 후 주소를 입력해 주세요.",
     },
-    "MOVEIN_SELECT_DATE": {
-        "NORMAL":     "전입일을 선택해 주세요.",
-        "ELDERLY":    "이사 오신 날짜를 선택해 주세요.",
-        "WHEELCHAIR": "전입일을 선택해 주세요.",
+    "MOVEIN_SELECT_HOUSEHOLD": {
+        "NORMAL":     "이사 후 세대 구성을 선택해 주세요.",
+        "ELDERLY":    "이사 후 세대 구성을 선택해 주세요.",
+        "WHEELCHAIR": "이사 후 세대 구성을 선택해 주세요.",
     },
-    "MOVEIN_INPUT_MEMBERS": {
-        "NORMAL":     "전입 세대원 정보를 입력해 주세요.",
-        "ELDERLY":    "함께 이사 오신 가족이 있으면 입력해 주세요.",
-        "WHEELCHAIR": "전입 세대원 정보를 입력해 주세요.",
+    "MOVEIN_SELECT_EXTRA_SERVICE": {
+        "NORMAL":     "추가 신청 서비스를 선택해 주세요.",
+        "ELDERLY":    "추가로 신청하실 서비스가 있으면 선택해 주세요.",
+        "WHEELCHAIR": "추가 신청 서비스를 선택해 주세요.",
     },
     "MOVEIN_CONFIRM": {
-        "NORMAL":     "입력하신 내용을 확인해 주세요. 맞으면 신고 버튼을 눌러 주세요.",
-        "ELDERLY":    "내용을 천천히 확인해 주세요. 맞으시면 신고 버튼을 눌러 주세요.",
-        "WHEELCHAIR": "입력하신 내용을 확인해 주세요. 맞으면 신고 버튼을 눌러 주세요.",
+        "NORMAL":     "입력하신 전입신고 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
+        "ELDERLY":    "전입신고 내용을 천천히 확인해 주세요. 맞으시면 제출 버튼을 눌러 주세요.",
+        "WHEELCHAIR": "입력하신 전입신고 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
     },
     "MOVEIN_COMPLETE": {
         "NORMAL":     "전입신고가 완료되었습니다.",
@@ -144,21 +159,24 @@ def _step_to_prompt(step: str, user_type: str) -> str:
     AI가 어느 화면·단계인지 파악할 수 있도록 충분한 컨텍스트를 제공한다.
     """
     step_descriptions = {
-        # 주민등록등본 발급 (실제 단계 순서)
-        # 1.주민번호입력 -> 2.발급형태 -> 3.발급매수 -> 4.확인 -> 5.출력 -> 6.완료
-        "CERTIFICATE_SELECT_RRN":     "주민등록번호 입력 화면에 진입했습니다. 주민등록번호 13자리를 입력해 주세요.",
-        "CERTIFICATE_SELECT_SCOPE":   "발급 형태(등본/초본) 선택 화면에 진입했습니다.",
-        "CERTIFICATE_SELECT_COUNT":   "발급 매수 선택 화면에 진입했습니다.",
-        "CERTIFICATE_CONFIRM":        "발급 내용 최종 확인 화면에 진입했습니다.",
-        "CERTIFICATE_PRINTING":       "등본 출력이 시작되었습니다.",
-        "CERTIFICATE_COMPLETE":       "등본 출력이 완료되었습니다.",
+        # 주민등록등본/초본 발급 (실제 단계 순서)
+        # 1.증명서종류 -> 2.주민번호입력 -> 3.발급형태 -> 4.발급매수 -> 5.확인 -> 6.출력 -> 7.완료
+        "CERTIFICATE_SELECT_PURPOSE":  "발급할 증명서 종류(등본/초본) 선택 화면에 진입했습니다.",
+        "CERTIFICATE_SELECT_RRN":      "주민등록번호 입력 화면에 진입했습니다. 주민등록번호 13자리를 입력해 주세요.",
+        "CERTIFICATE_SELECT_SCOPE":    "발급 형태(등본/초본) 선택 화면에 진입했습니다.",
+        "CERTIFICATE_SELECT_COUNT":    "발급 매수 선택 화면에 진입했습니다.",
+        "CERTIFICATE_CONFIRM":         "발급 내용 최종 확인 화면에 진입했습니다. 맞으면 제출 버튼을 눌러 주세요.",
+        "CERTIFICATE_PRINTING":        "등본 출력이 시작되었습니다.",
+        "CERTIFICATE_COMPLETE":        "등본 출력이 완료되었습니다.",
         # 전입신고
-        "MOVEIN_INPUT_PREV_ADDRESS":  "이전 주소 입력 화면에 진입했습니다.",
-        "MOVEIN_INPUT_NEW_ADDRESS":   "새 주소 입력 화면에 진입했습니다.",
-        "MOVEIN_SELECT_DATE":         "전입일 선택 화면에 진입했습니다.",
-        "MOVEIN_INPUT_MEMBERS":       "전입 세대원 정보 입력 화면에 진입했습니다.",
-        "MOVEIN_CONFIRM":             "전입신고 내용 최종 확인 화면에 진입했습니다.",
-        "MOVEIN_COMPLETE":            "전입신고가 완료되었습니다.",
+        "MOVEIN_INPUT_BASIC_INFO":     "본인확인 및 기본정보 입력 화면에 진입했습니다.",
+        "MOVEIN_SELECT_REASON":        "전입사유 선택 화면에 진입했습니다.",
+        "MOVEIN_INPUT_PREV_ADDRESS":   "이사 전 주소 확인 및 이사 가는 사람 선택 화면에 진입했습니다.",
+        "MOVEIN_INPUT_NEW_ADDRESS":    "이사 후 새 주소 입력 화면에 진입했습니다.",
+        "MOVEIN_SELECT_HOUSEHOLD":     "이사 후 세대 구성 선택 화면에 진입했습니다.",
+        "MOVEIN_SELECT_EXTRA_SERVICE": "추가 신청 서비스 선택 화면에 진입했습니다.",
+        "MOVEIN_CONFIRM":              "전입신고 내용 최종 확인 화면에 진입했습니다. 맞으면 제출 버튼을 눌러 주세요.",
+        "MOVEIN_COMPLETE":             "전입신고가 완료되었습니다.",
     }
     description = step_descriptions.get(step, f"{step} 단계에 진입했습니다.")
     user_type_hint = {
