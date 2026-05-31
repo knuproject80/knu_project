@@ -11,7 +11,7 @@ STOMP_SUB_FRONT_ACK = "/topic/front/ack"
 STOMP_PUB_UI_PREFIX = "/topic/ui"
 
 # MCP 서버 설정
-MCP_SERVER_PATH = "./mcp_server.py"
+MCP_SERVER_PATH = "../mcp_server.py"
 
 # 서비스 ID 상수
 SERVICE_ID_REGISTRATION = 101
