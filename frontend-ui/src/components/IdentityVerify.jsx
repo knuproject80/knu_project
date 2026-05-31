@@ -1,25 +1,34 @@
-import ProgressSteps from './ProgressSteps';
+import FlowHeader from './FlowHeader';
 import BottomActions from './BottomActions';
 import Keypad from './Keypad';
 
 export default function IdentityVerify({ residentFront, residentBack, onKeypadPress, onHome, onPrev, onNext }) {
   return (
     <>
-      <section className="content-panel identity-panel">
-        <h2 className="section-title">본인확인을 해주세요.</h2>
-        <ProgressSteps currentStep={2} />
+      <section className="content-panel resident-panel resident-identity-panel">
+        <FlowHeader title="본인확인을 해주세요." currentStep={2} />
 
-        <div className="content-body-frame body-center-frame">
-          <div className="field-block compact-top-gap">
-            <label className="field-label">주민등록번호 입력</label>
-            <div className="resident-input-row">
-              <div className="masked-input">{residentFront}</div>
-              <span className="hyphen">-</span>
-              <div className="masked-input">{residentBack}</div>
+        <div className="content-body-frame body-left-frame resident-body">
+          <section className="resident-card resident-identity-card">
+            <h3 className="resident-card-title">주민등록번호 본인확인</h3>
+
+            <div className="resident-field-block">
+              <label className="resident-field-label">주민등록번호 입력 <span>(필수)</span></label>
+              <div className="resident-number-row">
+                <div className="masked-input resident-number-input" aria-label="주민등록번호 앞자리">
+                  {residentFront}
+                </div>
+                <span className="resident-hyphen">-</span>
+                <div className="masked-input resident-number-input" aria-label="주민등록번호 뒷자리">
+                  {'●'.repeat(residentBack.length)}
+                </div>
+              </div>
             </div>
-          </div>
 
-          <Keypad onPress={onKeypadPress} />
+            <div className="resident-keypad-wrap">
+              <Keypad onPress={onKeypadPress} />
+            </div>
+          </section>
         </div>
       </section>
 

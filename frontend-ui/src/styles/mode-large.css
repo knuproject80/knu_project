@@ -41,3 +41,58 @@
   --keypad-height: 138px;
   --keypad-grid-width: 850px;
 }
+
+/* 전입신고 + 확대 */
+.screen-frame.large-font .transfer-panel .progress-steps {
+  margin-bottom: 60px;
+}
+
+.screen-frame.large-font .transfer-card {
+  padding: 38px;
+}
+
+.screen-frame.large-font .transfer-input {
+  min-height: 104px;
+}
+
+.screen-frame.large-font .transfer-search-button {
+  min-height: 104px;
+}
+
+.screen-frame.large-font .transfer-reason-grid {
+  gap: 20px 32px;
+}
+
+/* 주민등록등본(초본) + 확대 */
+.screen-frame.large-font .resident-panel .progress-steps {
+  margin-bottom: 60px;
+}
+
+.screen-frame.large-font .resident-card {
+  padding: 38px;
+}
+
+.screen-frame.large-font .resident-choice-button,
+.screen-frame.large-font .resident-option-button,
+.screen-frame.large-font .resident-check-row {
+  min-height: 104px;
+}
+
+.screen-frame.large-font .resident-choice-button {
+  min-height: 150px;
+}
+
+.screen-frame.large-font .resident-summary-block {
+  padding: 26px;
+}
+
+/* v2: 통합 선택 행 확대모드 보정 */
+.screen-frame.large-font .transfer-option-button,
+.screen-frame.large-font .resident-option-button,
+.screen-frame.large-font .resident-check-row,
+.screen-frame.large-font .transfer-extra-row {
+  min-height: 104px;
+  font-size: calc(var(--font-field-label) * 0.68);
+  padding: 18px 26px;
+}
+
