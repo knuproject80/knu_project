@@ -36,18 +36,22 @@ class AIClient:
         self,
         base_url: str | None = None,
         timeout_sec: float | None = None,
+        chat_timeout_sec: float | None = None,
     ):
         self.base_url = base_url or config.AI_SERVER_BASE_URL
         self.timeout_sec = timeout_sec or config.AI_SERVER_TIMEOUT_SEC
+        # /chat은 AI 생성 포함으로 /classify보다 응답이 느림 — 별도 타임아웃 적용
+        self.chat_timeout_sec = chat_timeout_sec or config.AI_SERVER_CHAT_TIMEOUT_SEC
 
     # ──────────────────────────────────────────────────────
     #  공통 HTTP 헬퍼
     # ──────────────────────────────────────────────────────
 
-    def _post(self, endpoint: str, payload: dict) -> dict[str, Any]:
+    def _post(self, endpoint: str, payload: dict, timeout: float | None = None) -> dict[str, Any]:
         """
         POST 요청 공통 처리.
         네트워크 오류 / JSON 파싱 실패 / 응답 형식 오류를 AIClientError로 변환한다.
+        timeout이 None이면 self.timeout_sec을 사용한다.
         """
         url = f"{self.base_url}{endpoint}"
         logger.info("AI 서버 호출: %s", url)
@@ -57,7 +61,7 @@ class AIClient:
                 url,
                 json=payload,
                 headers={"accept": "application/json"},
-                timeout=self.timeout_sec,
+                timeout=timeout if timeout is not None else self.timeout_sec,
             )
             response.raise_for_status()
         except requests.RequestException as e:
@@ -116,7 +120,7 @@ class AIClient:
             "conversation_history": conversation_history or [],
         }
 
-        result = self._post("/chat", payload)
+        result = self._post("/chat", payload, timeout=self.chat_timeout_sec)
 
         logger.info(
             "AI 응답 수신: intent=%s serviceId=%s confidence=%s answer=%.40s…",

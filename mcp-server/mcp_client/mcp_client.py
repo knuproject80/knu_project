@@ -354,15 +354,16 @@ class MCPToolManager:
         audioUrl이 없으면 guideText를 VOICE_GUIDE 커맨드에 담아 전송하고,
         프론트(또는 OS TTS)가 읽어준다.
         """
-        valid_contexts = {
+        # 세션/모드 전환 5종 + STEP_KEY는 모두 허용
+        # STEP_KEY는 CERTIFICATE_SELECT_RRN, MOVEIN_INPUT_BASIC_INFO 등 가변적이므로
+        # 고정 목록에 없어도 그대로 전달한다.
+        fixed_contexts = {
             "SESSION_START", "SERVICE_ENTER", "HOME", "MODE_CHANGE", "SESSION_END"
         }
-        if context not in valid_contexts:
-            logger.warning(
-                "[MCP] voice_guide — 알 수 없는 context '%s' → 'SERVICE_ENTER' 대체",
-                context,
+        if context not in fixed_contexts:
+            logger.debug(
+                "[MCP] voice_guide — step context 전달: '%s'", context
             )
-            context = "SERVICE_ENTER"
 
         logger.info(
             "[MCP] voice_guide 호출 — sessionId=%s context=%s userType=%s text=%.40s…",
