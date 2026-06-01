@@ -22,7 +22,7 @@ IntentType = Literal[
     "unknown",
 ]
 
-# v5 기준 허용 serviceId.
+# v6.1 기준 허용 serviceId.
 # low confidence / 서비스 외 발화는 빈 문자열("")로 내려보낸다.
 ServiceIdType = Literal[
     "RESIDENT_REGISTRATION_COPY",
@@ -34,6 +34,7 @@ ServiceIdType = Literal[
 
 SourceType = Literal["rule_based", "llm", "fallback", "mixed"]
 ConversationRole = Literal["user", "assistant", "system"]
+PaymentMethodType = Literal["CASH", "CARD"]
 
 
 class HealthResponse(BaseModel):
@@ -46,6 +47,19 @@ class HealthResponse(BaseModel):
 class ConversationMessage(BaseModel):
     role: ConversationRole
     content: str = Field(default="", max_length=2000)
+
+
+class CertificateEntities(BaseModel):
+    """v6.0/v6.1 다중 발화 필드 추출 결과.
+
+    MCP Client는 이 값을 session_manager.set_prefilled(session_id, entities)에 저장한 뒤
+    STEP_CHANGE 단계에서 prefilled 여부를 판단한다.
+    """
+
+    count: Optional[int] = Field(default=None, description="발급 매수. 예: 1개, 두 장")
+    paymentMethod: Optional[PaymentMethodType] = Field(default=None, description="CASH 또는 CARD")
+    purpose: Optional[str] = Field(default=None, description="제출용, 은행용 등")
+    scope: Optional[str] = Field(default=None, description="발급형태/공개범위")
 
 
 class BaseTextRequest(BaseModel):
@@ -88,6 +102,7 @@ class ServiceRecommendResponse(BaseModel):
     intent: IntentType
     serviceId: ServiceIdType
     confidence: float = Field(..., ge=0.0, le=1.0)
+    entities: CertificateEntities = Field(default_factory=CertificateEntities)
     answer: str
     source: SourceType
     raw_text: str
@@ -101,7 +116,8 @@ class ChatResponse(BaseModel):
     intent: IntentType
     serviceId: ServiceIdType
     confidence: float = Field(..., ge=0.0, le=1.0)
-    entities: dict[str, Any] = Field(default_factory=dict)
+    # v6.0부터 필수. count/paymentMethod/purpose/scope 키가 항상 포함되어야 한다.
+    entities: CertificateEntities = Field(default_factory=CertificateEntities)
     answer: str
     conversation_history: list[ConversationMessage]
     userType: UserType = "NORMAL"
@@ -123,6 +139,7 @@ class AnalyzeResponse(BaseModel):
     intent: IntentType
     serviceId: ServiceIdType
     serviceConfidence: float = Field(..., ge=0.0, le=1.0)
+    entities: CertificateEntities = Field(default_factory=CertificateEntities)
     answer: str
 
     needsConfirmation: bool
