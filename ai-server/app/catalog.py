@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -32,14 +33,14 @@ SERVICE_CATALOG: tuple[ServiceItem, ...] = (
         service_id="MOVE_IN_REPORT",
         intent="submit_application",
         service_name="전입신고",
-        answer="전입신고를 도와드릴게요. 이사 온 주소를 준비해 주세요.",
+        answer="전입신고를 도와드릴게요. 이사 후 주소를 준비해 주세요.",
         keywords=("전입신고", "이사신고", "이사와서신고", "주소이전", "주소이전신고", "주소옮김"),
     ),
     ServiceItem(
         service_id="MOVE_OUT_REPORT",
         intent="submit_application",
         service_name="전출신고",
-        answer="전출신고를 도와드릴게요. 이동할 주소 정보를 준비해 주세요.",
+        answer="전출신고를 도와드릴게요. 이사 가실 주소를 준비해 주세요.",
         keywords=("전출신고", "나가는신고", "이사나감", "전출"),
     ),
 )
@@ -53,22 +54,30 @@ OUT_OF_SCOPE_KEYWORDS: tuple[str, ...] = (
     "날씨", "맛집", "주식", "뉴스", "노래", "게임", "농담", "시간알려", "몇시",
 )
 
-
+# v6.1 공식 단계 + 프론트 실제 STEP_CHANGE key를 모두 수용한다.
+# - v6.1 가이드: 등본 단계는 RRN → SCOPE → COUNT → CONFIRM → PRINTING → COMPLETE.
+# - 프론트 협의 요청: CERTIFICATE_SELECT_PURPOSE 및 세분화된 MOVEIN_* key도 사용.
 STEP_PROMPTS: dict[str, str] = {
-    # 주민등록등본 발급 단계
-    "CERTIFICATE_SELECT_PURPOSE": "등본 용도를 선택해 주세요.",
+    # 주민등록등본/초본 발급 단계
+    "CERTIFICATE_SELECT_PURPOSE": "발급할 증명서 종류를 선택해 주세요.",
+    "CERTIFICATE_SELECT_RRN": "주민등록번호를 입력해 주세요.",
+    "CERTIFICATE_SELECT_SCOPE": "발급형태를 선택해 주세요.",
     "CERTIFICATE_SELECT_COUNT": "발급 매수를 선택해 주세요.",
-    "CERTIFICATE_SELECT_SCOPE": "주민등록번호 공개 범위를 선택해 주세요.",
-    "CERTIFICATE_CONFIRM": "입력하신 내용을 확인해 주세요. 맞으면 발급 버튼을 눌러 주세요.",
+    "CERTIFICATE_CONFIRM": "입력하신 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
     "CERTIFICATE_PRINTING": "출력 중입니다. 잠시 기다려 주세요.",
     "CERTIFICATE_COMPLETE": "등본 출력이 완료되었습니다. 서류를 가져가 주세요.",
-    # 전입신고 단계
-    "MOVEIN_INPUT_PREV_ADDRESS": "이사 오시기 전 살던 주소를 입력해 주세요.",
-    "MOVEIN_INPUT_NEW_ADDRESS": "이사 오신 새 주소를 입력해 주세요.",
-    "MOVEIN_SELECT_DATE": "이사 오신 날짜를 선택해 주세요.",
-    "MOVEIN_INPUT_MEMBERS": "함께 이사 오신 가족이 있으면 입력해 주세요.",
-    "MOVEIN_CONFIRM": "내용을 확인해 주세요. 맞으시면 신고 버튼을 눌러 주세요.",
-    "MOVEIN_COMPLETE": "전입신고가 완료되었습니다. 고생하셨습니다.",
+    # 전입신고 단계: 프론트 실제 화면 흐름 기준 세분화 key
+    "MOVEIN_INPUT_BASIC_INFO": "본인확인 및 기본정보를 입력해 주세요.",
+    "MOVEIN_SELECT_REASON": "전입사유를 선택해 주세요.",
+    "MOVEIN_INPUT_PREV_ADDRESS": "이사 전 주소를 확인하고, 이사 가는 사람을 선택해 주세요.",
+    "MOVEIN_INPUT_NEW_ADDRESS": "이사 후 주소를 입력해 주세요.",
+    "MOVEIN_SELECT_HOUSEHOLD": "이사 후 세대 구성을 선택해 주세요.",
+    "MOVEIN_SELECT_EXTRA_SERVICE": "추가 신청 서비스를 선택해 주세요.",
+    "MOVEIN_CONFIRM": "입력하신 전입신고 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요.",
+    # 전입신고 단계: v6.1 테스트 가이드에 남아있는 key도 하위 호환 지원
+    "MOVEIN_SELECT_DATE": "전입일을 선택해 주세요.",
+    "MOVEIN_INPUT_MEMBERS": "전입 세대원 정보를 입력해 주세요.",
+    "MOVEIN_COMPLETE": "전입신고가 완료되었습니다.",
 }
 
 
@@ -79,6 +88,20 @@ CONTEXT_PROMPTS: dict[str, str] = {
     "HOME": "처음 화면으로 돌아왔습니다. 필요한 민원 서비스를 말씀해 주세요.",
     "SESSION_END": "이용해 주셔서 감사합니다. 서류와 소지품을 챙겨 주세요.",
     "ERROR_RETRY": "죄송합니다. 다시 한 번 말씀해 주세요.",
+}
+
+# v6.0/v6.1 prefilled 스킵 대상. AI Server는 entities를 반환하고,
+# 실제 스킵 여부는 MCP Client(session_manager)가 판단한다.
+STEP_TO_ENTITY: dict[str, str] = {
+    "CERTIFICATE_SELECT_COUNT": "count",
+    "CERTIFICATE_SELECT_SCOPE": "scope",
+}
+
+DEFAULT_ENTITIES: dict[str, Any] = {
+    "count": None,
+    "paymentMethod": None,
+    "purpose": None,
+    "scope": None,
 }
 
 

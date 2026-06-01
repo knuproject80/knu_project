@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.config import settings
-from app.services.service_recommend import recommend_service
+from app.services.service_recommend import recommend_service, sanitize_entities
 from app.services.user_type import classify_user_type
 
 
@@ -43,6 +43,7 @@ def analyze_text(text: str) -> dict[str, Any]:
         "intent": service_result.get("intent", "unknown"),
         "serviceId": service_result.get("serviceId", ""),
         "serviceConfidence": service_confidence,
+        "entities": sanitize_entities(service_result.get("entities")),
         "answer": service_result.get("answer", "다시 말씀해 주세요."),
         "needsConfirmation": needs_confirmation,
         "source": source,

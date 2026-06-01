@@ -25,6 +25,19 @@ USER_TYPE_JSON_SCHEMA = {
 }
 
 
+_ENTITIES_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "count": {"type": ["integer", "null"], "minimum": 1, "maximum": 10},
+        "paymentMethod": {"type": ["string", "null"], "enum": ["CASH", "CARD", None]},
+        "purpose": {"type": ["string", "null"]},
+        "scope": {"type": ["string", "null"]},
+    },
+    "required": ["count", "paymentMethod", "purpose", "scope"],
+    "additionalProperties": False,
+}
+
+
 SERVICE_RECOMMEND_JSON_SCHEMA = {
     "type": "json_schema",
     "name": "service_recommend_response",
@@ -53,9 +66,10 @@ SERVICE_RECOMMEND_JSON_SCHEMA = {
                 ],
             },
             "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "entities": _ENTITIES_SCHEMA,
             "answer": {"type": "string"},
         },
-        "required": ["intent", "serviceId", "confidence", "answer"],
+        "required": ["intent", "serviceId", "confidence", "entities", "answer"],
         "additionalProperties": False,
     },
     "strict": True,
