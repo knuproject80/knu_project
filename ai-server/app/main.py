@@ -7,17 +7,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.model import model_instance
+from typing import Union
+
 from app.schemas import (
     AnalyzeResponse,
     BaseTextRequest,
     ChatRequest,
     ChatResponse,
+    StepGuideResponse,
     HealthResponse,
     ServiceRecommendResponse,
     UserTypeResponse,
 )
 from app.services.analyze import analyze_text
-from app.services.chat import chat_text
+from app.services.chat import chat_step_guide, chat_text
 from app.services.service_recommend import recommend_service
 from app.services.user_type import classify_user_type
 
@@ -63,12 +66,25 @@ def health() -> HealthResponse:
     )
 
 
-@app.post("/chat", response_model=ChatResponse)
-def chat_endpoint(req: ChatRequest) -> ChatResponse:
-    """v6.1 MCP Client 연동용 엔드포인트.
+@app.post("/chat", response_model=Union[ChatResponse, StepGuideResponse])
+def chat_endpoint(req: ChatRequest) -> ChatResponse | StepGuideResponse:
+    """MCP Client 연동용 /chat 엔드포인트.
 
-    의도 분류, entities 추출, 음성 안내용 answer, 업데이트된 conversation_history를 반환한다.
+    - mode="classify" 또는 mode 누락: VOICE_INPUT용 의도 분류 + 진입 안내.
+    - mode="step_guide": STEP_CHANGE용 단계 안내 문구만 생성. 의도 분류를 수행하지 않는다.
     """
+    if req.mode == "step_guide":
+        result = chat_step_guide(
+            step=req.step or "",
+            session_id=req.session_id,
+            locale=req.locale,
+            user_type=req.userType,
+            service_id=req.serviceId,
+            extra_context=req.extra_context,
+            conversation_history=req.conversation_history,
+        )
+        return StepGuideResponse(**result)
+
     result = chat_text(
         req.text,
         session_id=req.session_id,
