@@ -89,46 +89,105 @@ class AIClient:
         session_id: str = "string",
         locale: str = "ko-KR",
         conversation_history: list | None = None,
+        mode: str = "classify",
+        step: str | None = None,
+        user_type: str | None = None,
+        service_id: int | None = None,
+        extra_context: dict | None = None,
     ) -> dict[str, Any]:
         """
         AI 서버 /chat 호출.
-        의도 분류(intent / serviceId / confidence)와
-        자연어 답변(answer) / 대화 기록(conversation_history)을 동시에 수신한다.
+
+        mode 파라미터로 두 가지 호출 목적을 구분한다:
+
+        ─────────────────────────────────────────────────────────
+        mode="classify" (기본값) — 사용자 발화 의도 분류
+        ─────────────────────────────────────────────────────────
+        VOICE_INPUT 수신 시 호출. 사용자의 자연어 발화를 분석해
+        의도(intent), 서비스 ID(serviceId), 사용자 유형(userType),
+        신뢰도(confidence), 자연어 답변(answer)을 동시에 반환한다.
 
         Request:
         {
+            "mode":                 "classify",
             "text":                 "주민등록등본 발급받고 싶어요",
             "session_id":           "uuid",
             "locale":               "ko-KR",
-            "conversation_history": []          // 이전 대화 맥락
+            "conversation_history": []
         }
 
-        Response (필수 필드):
+        Response:
         {
             "intent":               "SERVICE_REQUEST",
             "serviceId":            "RESIDENT_REGISTRATION_COPY",
+            "userType":             "NORMAL",
             "confidence":           0.92,
-            "answer":               "주민등록등본 발급을 도와드릴게요. 신분증을 준비해 주세요.",
-            "conversation_history": [ ... ],    // 업데이트된 대화 기록
+            "answer":               "주민등록등본 발급을 도와드릴게요...",
+            "conversation_history": [ ... ],
             "entities":             { ... }     // 선택
         }
+
+        ─────────────────────────────────────────────────────────
+        mode="step_guide" — 단계별 안내 문구 생성 (의도 분류 없음)
+        ─────────────────────────────────────────────────────────
+        STEP_CHANGE 수신 시 호출. 현재 단계(step), 사용자 유형(userType),
+        서비스 ID(service_id), 부가 맥락(extra_context: retryCount 등)을
+        기반으로 해당 단계에 맞는 안내 문구만 생성한다.
+        의도 분류는 수행하지 않으므로 intent/serviceId/confidence는 무시한다.
+
+        Request:
+        {
+            "mode":          "step_guide",
+            "session_id":    "uuid",
+            "locale":        "ko-KR",
+            "step":          "CERTIFICATE_SELECT_RRN",
+            "userType":      "ELDERLY",
+            "serviceId":     102,
+            "extra_context": { "retryCount": 0, "prevStep": "..." },
+            "conversation_history": []
+        }
+
+        Response:
+        {
+            "answer":               "주민등록번호 13자리를 천천히 입력해 주세요.",
+            "conversation_history": [ ... ]
+        }
+        ─────────────────────────────────────────────────────────
         """
-        payload = {
+        payload: dict[str, Any] = {
+            "mode":                 mode,
             "text":                 text,
             "session_id":           session_id,
             "locale":               locale,
             "conversation_history": conversation_history or [],
         }
 
+        # step_guide 모드 전용 필드 — None은 전송하지 않음
+        if mode == "step_guide":
+            if step is not None:
+                payload["step"] = step
+            if user_type is not None:
+                payload["userType"] = user_type
+            if service_id is not None:
+                payload["serviceId"] = service_id
+            if extra_context is not None:
+                payload["extra_context"] = extra_context
+
         result = self._post("/chat", payload, timeout=self.chat_timeout_sec)
 
-        logger.info(
-            "AI 응답 수신: intent=%s serviceId=%s confidence=%s answer=%.40s…",
-            result.get("intent"),
-            result.get("serviceId"),
-            result.get("confidence"),
-            result.get("answer", ""),
-        )
+        if mode == "step_guide":
+            logger.info(
+                "AI 응답 수신 (step_guide): step=%s userType=%s answer=%.40s…",
+                step, user_type, result.get("answer", ""),
+            )
+        else:
+            logger.info(
+                "AI 응답 수신 (classify): intent=%s serviceId=%s confidence=%s answer=%.40s…",
+                result.get("intent"),
+                result.get("serviceId"),
+                result.get("confidence"),
+                result.get("answer", ""),
+            )
         return result
 
     # ──────────────────────────────────────────────────────

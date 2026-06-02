@@ -477,11 +477,20 @@ class UIController:
         ack_timeout_sec: float = 3.0,
     ) -> bool:
         command_id = str(uuid.uuid4())
+
+        # data에 sessionId 자동 보강:
+        # 프론트는 sessionId 기반으로 UI 명령을 라우팅·검증하므로
+        # 모든 UI 명령 payload의 data.sessionId에 동일한 sessionId가 들어가야 한다.
+        # 호출자가 이미 명시한 sessionId가 있으면 덮어쓰지 않는다.
+        data = dict(payload) if payload else {}
+        if session_id and "sessionId" not in data:
+            data["sessionId"] = session_id
+
         message = {
             "action": action,
             "timestamp": datetime.now().isoformat(),
             "commandId": command_id,
-            "data": payload or {},
+            "data": data,
         }
         dest = f"{self._pub_ui_prefix}/{session_id}" if session_id else f"{self._pub_ui_prefix}/global"
         body = json.dumps(message, ensure_ascii=False)
