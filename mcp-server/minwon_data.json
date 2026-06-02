@@ -3,19 +3,38 @@
     "등본": {
       "serviceId": 102,
       "name": "주민등록등본",
-      "steps": "본인 인증 후 신청서 작성",
+      "steps": [
+        "CERTIFICATE_SELECT_RRN",
+        "CERTIFICATE_SELECT_SCOPE",
+        "CERTIFICATE_SELECT_COUNT",
+        "CERTIFICATE_CONFIRM",
+        "CERTIFICATE_PRINTING",
+        "CERTIFICATE_COMPLETE"
+      ],
       "fee": "400원"
     },
     "초본": {
       "serviceId": 102,
       "name": "주민등록초본",
-      "steps": "본인 인증 후 발급 버튼 클릭",
+      "steps": [
+        "CERTIFICATE_SELECT_RRN",
+        "CERTIFICATE_SELECT_SCOPE",
+        "CERTIFICATE_SELECT_COUNT",
+        "CERTIFICATE_CONFIRM",
+        "CERTIFICATE_PRINTING",
+        "CERTIFICATE_COMPLETE"
+      ],
       "fee": "400원"
     },
     "전입": {
       "serviceId": 101,
       "name": "전입신고 신청",
-      "steps": "인적사항 입력 및 이전 거주지 확인",
+      "steps": [
+        "MOVEIN_INPUT_BASIC_INFO",
+        "MOVEIN_INPUT_PREV_ADDRESS",
+        "MOVEIN_CONFIRM",
+        "MOVEIN_COMPLETE"
+      ],
       "fee": "무료"
     }
   }
