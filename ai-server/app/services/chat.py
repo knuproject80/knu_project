@@ -206,6 +206,160 @@ def _fallback_llm_answer(prompt_payload: dict[str, Any], fallback: str) -> tuple
     return fallback, True, json.dumps({"answer": fallback}, ensure_ascii=False), "rule_based_fallback"
 
 
+
+
+def _normalize_user_type(user_type: str | None) -> str:
+    value = str(user_type or "NORMAL").strip().upper()
+    if value not in {"NORMAL", "ELDERLY", "WHEELCHAIR", "VISUAL_IMPAIRMENT", "HEARING_IMPAIRMENT"}:
+        return "NORMAL"
+    return value
+
+
+def _retry_count(extra_context: dict[str, Any] | Any | None) -> int:
+    if extra_context is None:
+        return 0
+    if isinstance(extra_context, dict):
+        raw = extra_context.get("retryCount", 0)
+    else:
+        raw = getattr(extra_context, "retryCount", 0)
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _service_id_to_int(service_id: int | str | None) -> int | None:
+    if service_id is None:
+        return None
+    if isinstance(service_id, int):
+        return service_id
+    text = str(service_id).strip()
+    if text.isdigit():
+        return int(text)
+    if text in {"RESIDENT_REGISTRATION_COPY", "RESIDENT_REGISTRATION_ABSTRACT"}:
+        return 102
+    if text in {"MOVE_IN_REPORT", "MOVE_OUT_REPORT"}:
+        return 101
+    return None
+
+
+def _base_step_guide(step_key: str, service_id: int | str | None = None) -> str:
+    step_key = step_key.strip().upper()
+    found = find_step_prompt(step_key)
+    if found is not None:
+        return found[1]
+
+    # serviceId를 참고한 보정. 알 수 없는 step에도 의도 재요청 문구는 반환하지 않는다.
+    sid = _service_id_to_int(service_id)
+    if sid == 102:
+        return "현재 화면에서 필요한 정보를 입력해 주세요."
+    if sid == 101:
+        return "현재 전입신고 화면의 정보를 입력해 주세요."
+    return "현재 화면의 안내에 따라 입력해 주세요."
+
+
+def _step_guide_answer(step_key: str, user_type: str, retry_count: int, service_id: int | str | None = None) -> str:
+    """STEP_CHANGE 전용 안내 문구 생성.
+
+    classify 모드와 달리 의도 재요청 문구를 절대 반환하지 않는다.
+    """
+
+    step_key = step_key.strip().upper()
+    user_type = _normalize_user_type(user_type)
+    base = _base_step_guide(step_key, service_id)
+
+    # 요청서 예시와 실제 프론트 문구에 맞춘 특수 처리.
+    if step_key == "CERTIFICATE_SELECT_RRN":
+        if user_type == "ELDERLY":
+            base = "앞자리와 뒷자리를 천천히 입력해 주세요."
+        else:
+            base = "주민등록번호를 입력해 주세요."
+    elif step_key == "MOVEIN_CONFIRM":
+        if user_type == "WHEELCHAIR":
+            base = "내용을 확인하고 제출 버튼을 한 번 눌러 주세요."
+        else:
+            base = "입력하신 전입신고 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요."
+    elif step_key == "CERTIFICATE_CONFIRM":
+        base = "입력하신 내용을 확인해 주세요. 맞으면 제출 버튼을 눌러 주세요."
+
+    if retry_count >= 2:
+        if user_type == "ELDERLY":
+            return "어려우시면 직원 호출 버튼을 눌러 주세요."
+        return "어려우시면 직원 호출 버튼을 눌러 주세요."
+
+    if retry_count >= 1:
+        if user_type == "ELDERLY":
+            if "천천히" in base:
+                return f"다시 한 번 {base}"
+            return f"다시 한 번 천천히 {base}"
+        return f"다시 한 번 {base}"
+
+    if user_type == "ELDERLY" and "천천히" not in base:
+        # 너무 장황해지지 않게 1문장으로 유지한다.
+        return f"천천히 {base}"
+
+    if user_type == "WHEELCHAIR":
+        # 확인/선택 단계에서는 동작을 줄이는 표현을 넣는다.
+        if "버튼" in base and "한 번" not in base:
+            return base.replace("눌러 주세요", "한 번 눌러 주세요")
+        if step_key == "CERTIFICATE_PRINTING":
+            return "아래 출력구에서 서류를 받으실 수 있습니다. 잠시 기다려 주세요."
+
+    return base
+
+
+def chat_step_guide(
+    *,
+    step: str,
+    session_id: str | None = None,
+    locale: str = "ko-KR",
+    user_type: str = "NORMAL",
+    service_id: int | str | None = None,
+    extra_context: dict[str, Any] | Any | None = None,
+    conversation_history: list[ConversationMessage] | list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    """mode=step_guide 전용 처리.
+
+    STEP_CHANGE에서는 의도 분류를 하지 않고, 현재 step에 대한 안내 answer만 생성한다.
+    """
+
+    history = _history_to_dicts(conversation_history)
+    retry = _retry_count(extra_context)
+    normalized_user_type = _normalize_user_type(user_type)
+    answer = _limit_sentences(_step_guide_answer(step, normalized_user_type, retry, service_id), max_sentences=2)
+
+    # 방어: step_guide에서 의도 재요청 문구가 나가면 안 된다.
+    banned_fragments = ["무엇을 도와", "필요한 민원 서비스", "다시 말씀해"]
+    if any(fragment in answer for fragment in banned_fragments):
+        answer = _base_step_guide(step, service_id)
+
+    updated_history = history + [
+        {"role": "user", "content": f"STEP_CHANGE:{step.strip().upper()}"},
+        {"role": "assistant", "content": answer},
+    ]
+
+    return {
+        "task": "chat",
+        "success": True,
+        "mode": "step_guide",
+        "answer": answer,
+        "conversation_history": updated_history,
+        "source": "rule_based",
+        "raw_text": json.dumps(
+            {
+                "mode": "step_guide",
+                "step": step,
+                "userType": normalized_user_type,
+                "serviceId": service_id,
+                "retryCount": retry,
+                "answer": answer,
+            },
+            ensure_ascii=False,
+        ),
+        "model_name": "rule_based",
+    }
+
+
 def chat_text(
     text: str,
     *,
