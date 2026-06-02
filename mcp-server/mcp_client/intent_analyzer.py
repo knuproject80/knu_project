@@ -28,11 +28,23 @@ class IntentAnalyzer:
     }
 
     _USER_TYPE_HINTS = {
-        "어르신":  "ELDERLY",
-        "노인":    "ELDERLY",
-        "큰글씨":  "ELDERLY",
-        "휠체어":  "WHEELCHAIR",
-        "낮은":    "WHEELCHAIR",
+        # ELDERLY — 어르신/접근성 확대 발화
+        "어르신":    "ELDERLY",
+        "노인":      "ELDERLY",
+        "큰글씨":    "ELDERLY",
+        "큰 글씨":   "ELDERLY",
+        "글씨 크게": "ELDERLY",
+        "글자 크게": "ELDERLY",
+        "글씨 키워": "ELDERLY",
+        "글자 키워": "ELDERLY",
+        "확대해":    "ELDERLY",
+        "확대":      "ELDERLY",
+        "크게 해":   "ELDERLY",
+        # WHEELCHAIR — 낮은 화면 발화
+        "휠체어":    "WHEELCHAIR",
+        "낮은":      "WHEELCHAIR",
+        "낮은 화면": "WHEELCHAIR",
+        "화면 낮게": "WHEELCHAIR",
     }
 
     def parse_voice_intent(self, ai_raw_response: dict) -> dict | None:
@@ -60,12 +72,21 @@ class IntentAnalyzer:
         service_code = str(ai_raw_response.get("serviceId", ""))
         service_id = self._resolve_service_id_from_code(service_code)
 
-        # answer도 combined_text에 포함 — userType 감지 정확도 향상
-        # (예: answer에 "어르신" 포함 시 ELDERLY 감지)
-        combined_text = " ".join(
-            str(v) for v in ai_raw_response.values() if isinstance(v, str)
-        )
-        user_type = self._resolve_user_type(combined_text)
+        # userType 결정 우선순위:
+        #   1. AI 응답에 userType 필드가 명시된 경우 그대로 사용
+        #      (AI가 ELDERLY로 판단했는데 키워드 재스캔으로 NORMAL로 덮어쓰면 안 됨)
+        #   2. 없으면 combined_text 키워드 스캔으로 판단
+        ai_user_type = ai_raw_response.get("userType", "")
+        valid_user_types = {"ELDERLY", "WHEELCHAIR", "NORMAL"}
+        if ai_user_type in valid_user_types:
+            user_type = ai_user_type
+            logger.debug("userType AI 응답 우선 사용: %s", user_type)
+        else:
+            # answer도 combined_text에 포함 — 키워드 감지 정확도 향상
+            combined_text = " ".join(
+                str(v) for v in ai_raw_response.values() if isinstance(v, str)
+            )
+            user_type = self._resolve_user_type(combined_text)
 
         # ── /chat 전용 필드 추출 ──────────────────────────────
         answer = str(ai_raw_response.get("answer", ""))
