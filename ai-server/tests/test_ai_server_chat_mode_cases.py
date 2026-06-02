@@ -74,7 +74,7 @@ def main() -> None:
     )
     assert_case(
         "TC-STEP-GUIDE-RRN-ELDERLY",
-        "천천히" in rrn_elderly["answer"] and "주민등록번호" not in rrn_elderly["answer"],
+        "천천히" in rrn_elderly["answer"] and "주민등록번호" in rrn_elderly["answer"],
         rrn_elderly,
     )
 

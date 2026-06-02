@@ -271,7 +271,7 @@ def _step_guide_answer(step_key: str, user_type: str, retry_count: int, service_
     # 요청서 예시와 실제 프론트 문구에 맞춘 특수 처리.
     if step_key == "CERTIFICATE_SELECT_RRN":
         if user_type == "ELDERLY":
-            base = "앞자리와 뒷자리를 천천히 입력해 주세요."
+            base = "주민등록번호 앞자리와 뒷자리를 천천히 입력해 주세요."
         else:
             base = "주민등록번호를 입력해 주세요."
     elif step_key == "MOVEIN_CONFIRM":
