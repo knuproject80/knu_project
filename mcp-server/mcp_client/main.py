@@ -218,6 +218,13 @@ class KioskMainController:
     - _send_auto_advance: autoAdvance=True VOICE_GUIDE 전송 신규 메서드
       · ELDERLY 모드는 짧은 확인 음성(autoAdvanceGuide) 포함
     ─────────────────────────────────────────────────────────
+    v6.4 추가 및 수정 (버그 해결)
+    ─────────────────────────────────────────────────────────
+    - _send_auto_advance: autoAdvance 전송 완료 후 세션 내 prefilled 값을 소모(삭제)하여
+      사용자가 '이전' 버튼 클릭 시 동일한 단계에서 무한 스킵 루프에 갇히는 현상 방지
+    - _on_step_change: GUIDE_TEXT 상수에 존재하지 않는 잘못된 단계(UNKNOWN_STEP) 수신 시
+      AI 호출을 차단하고 즉시 ERROR_RETRY 음성 안내를 전달하도록 예외 처리 추가 (TC-FE-10 대응)
+    ─────────────────────────────────────────────────────────
     """
 
     def __init__(self):
@@ -293,10 +300,6 @@ class KioskMainController:
         data 예시:
         - str  : "주민등록등본 발급받고 싶어요"
         - dict : {"text": "...", "sessionId": "...", "locale": "ko-KR"}
-
-        변경사항:
-        - AI /chat 호출로 교체 (의도 분류 + answer 동시 수신)
-        - ai_answer, conversation_history를 추출해 하위 메서드로 전달
         """
         try:
             if isinstance(data, str):
@@ -316,7 +319,6 @@ class KioskMainController:
                 return
 
             # ── 1. AI /chat 호출 (mode="classify" — 의도 분류 + 자연어 답변) ──
-            # 기본 mode가 "classify"이므로 명시적 전달은 생략
             ai_raw = await asyncio.to_thread(
                 self.ai_http.chat,
                 user_text,
@@ -343,8 +345,6 @@ class KioskMainController:
         conversation_history = ai_res.get("conversation_history", [])
 
         # ── 3-1. entities 추출 (v6.0) ────────────────────────────────
-        # AI 서버가 반환한 entities를 raw 응답에서 직접 읽는다.
-        # IntentAnalyzer는 entities를 가공하지 않으므로 ai_raw에서 추출한다.
         entities: dict = ai_raw.get("entities", {}) if isinstance(ai_raw, dict) else {}
 
         logger.info(
@@ -354,24 +354,15 @@ class KioskMainController:
         )
 
         # ── 4. serviceId 분기 ─────────────────────────────────────────
-        # 주의: _change_mode는 내부에서 ADAPT_UI + MODE_CHANGE voice_guide를 전송한다.
-        # serviceId가 없는 모드 변경 케이스(ELDERLY/WHEELCHAIR)에서 _change_mode를
-        # 이중 호출하면 ADAPT_UI 2회, voice_guide 3회가 나가는 버그가 생기므로
-        # 반드시 분기 이후에 한 번만 호출한다.
         service_id = ai_res.get("serviceId")
         detected_user_type = ai_res.get("userType", "NORMAL")
 
         if service_id is None:
-            # 접근성 모드 변경 발화("글씨 크게", "확대" 등):
-            # serviceId가 없어도 ELDERLY/WHEELCHAIR면 모드 변경으로 처리한다.
             if detected_user_type in ("ELDERLY", "WHEELCHAIR"):
                 logger.info(
                     "serviceId 없음 + userType=%s → 모드 변경 요청으로 처리",
                     detected_user_type,
                 )
-                # _change_mode 내부에서 ADAPT_UI + MODE_CHANGE voice_guide를 전송.
-                # AI answer가 있으면 override_text로 사용하도록 내부 voice_guide 호출을
-                # 대체하기 위해 직접 분리 처리한다.
                 self.current_user_type = detected_user_type
                 self.ui.adapt_mode(detected_user_type, wait_ack=True)
                 logger.info("모드 변경: %s", detected_user_type)
@@ -391,8 +382,6 @@ class KioskMainController:
                 )
             return
 
-        # serviceId 있는 경우: 모드 전환 후 서비스 실행
-        # (서비스 진입 전에 한 번만 _change_mode 호출)
         await self._change_mode(detected_user_type)
 
         # ── 6. 서비스 실행 — AI answer를 SESSION_START 안내로 전달 ────
@@ -400,7 +389,7 @@ class KioskMainController:
             service_id,
             session_start_text=ai_answer,
             conversation_history=conversation_history,
-            entities=entities,                      # v6.0: prefilled 저장용
+            entities=entities,                      
         )
 
     # ── 터치 입력 처리 ───────────────────────────
@@ -409,37 +398,24 @@ class KioskMainController:
         if service_id is None:
             logger.warning("service_id 비어 있음 — 요청 무시")
             return
-        # 터치 입력은 AI 답변 없이 진행 (GUIDE_TEXT 폴백 사용)
         await self._execute_service(service_id)
 
     # ══════════════════════════════════════════════
     #  서비스 실행 핵심 흐름
-    #
-    #  start_session
-    #    → SESSION_ASSIGNED (/topic/ui/global, ACK 대기)
-    #      → voice_guide(SESSION_START, AI answer 우선)
-    #        → start_service → voice_guide(SERVICE_ENTER)
-    #          → STOMP MOVE_PAGE
-    #
-    #  SESSION_ASSIGNED를 먼저 보내는 이유:
-    #    프론트는 앱 시작 시 /topic/ui/global 만 구독한 상태.
-    #    SESSION_ASSIGNED를 받아야 /topic/ui/{sessionId}를 추가 구독하므로,
-    #    이 명령 전에 해당 토픽으로 보낸 VOICE_GUIDE/MOVE_PAGE는 프론트가 수신 불가.
     # ══════════════════════════════════════════════
 
     async def _execute_service(
         self,
         service_id: int,
-        session_start_text: str = "",           # AI answer (없으면 GUIDE_TEXT 폴백)
+        session_start_text: str = "",           
         conversation_history: list | None = None,
-        entities: dict | None = None,           # v6.0: AI가 추출한 prefilled 필드
+        entities: dict | None = None,           
     ):
         if conversation_history is None:
             conversation_history = []
         if entities is None:
             entities = {}
 
-        # ── 1. start_session ────────────────────
         try:
             session_result = await self.mcp.start_session(self.current_user_type)
         except ConnectionError as e:
@@ -455,22 +431,15 @@ class KioskMainController:
         session_id = session_result["sessionId"]
         settings = session_result.get("settings") or config.USER_CONFIGS[self.current_user_type]
 
-        # 로컬 SessionManager에 등록 + 대화 기록 저장
         self.sessions.create(session_id, self.current_user_type)
         if conversation_history:
             self.sessions.update_history(session_id, conversation_history)
 
-        # ── 1-1. prefilled entities 세션 저장 (v6.0) ──────────────
-        # None/빈 값 필터링은 session_manager.set_prefilled 내부에서 처리
         if entities:
             self.sessions.set_prefilled(session_id, entities)
 
-        # ── 2. SESSION_ASSIGNED → /topic/ui/global ───────────────
-        # 프론트가 새 sessionId 토픽을 추가 구독할 수 있도록
-        # 다른 UI 명령보다 반드시 먼저 전송한다.
-        # ACK(UI_ACK)를 기다려 프론트 구독 완료를 확인한 뒤 다음 단계로 진행한다.
         ack_ok = self.ui.send_command(
-            None,                               # → /topic/ui/global
+            None,                               
             "SESSION_ASSIGNED",
             {"sessionId": session_id},
             wait_ack=True,
@@ -483,9 +452,6 @@ class KioskMainController:
                 session_id,
             )
 
-        # ── 3. voice_guide — SESSION_START ───────
-        # SESSION_ASSIGNED ACK 이후 전송 → 프론트가 이미 sessionId 토픽 구독 완료
-        # AI answer 우선 사용, 없으면 GUIDE_TEXT 폴백
         await self._send_voice_guide(
             session_id=session_id,
             context="SESSION_START",
@@ -493,7 +459,6 @@ class KioskMainController:
             override_text=session_start_text,
         )
 
-        # ── 4. start_service ─────────────────────
         try:
             service_result = await self.mcp.start_service(
                 session_id=session_id,
@@ -518,15 +483,12 @@ class KioskMainController:
 
         self.sessions.activate(session_id, resolved_service_id)
 
-        # ── 5. voice_guide — SERVICE_ENTER ───────
-        # 서비스 진입 안내는 AI 맥락 없이 GUIDE_TEXT 그대로 사용
         await self._send_voice_guide(
             session_id=session_id,
             context="SERVICE_ENTER",
             user_type=self.current_user_type,
         )
 
-        # ── 6. STOMP MOVE_PAGE ───────────────────
         self.ui.reset_navigation()
 
         def _move():
@@ -558,33 +520,10 @@ class KioskMainController:
     # ══════════════════════════════════════════════
 
     async def _handle_step_with_ai(self, session_id: str, step: str):
-        """
-        STEP_CHANGE 수신 시 AI /chat (mode="step_guide") 호출로
-        맥락 기반 단계 안내 문구를 받아 VOICE_GUIDE로 전송한다.
-
-        흐름:
-          STEP_CHANGE
-            → AI /chat (mode="step_guide", step, userType, serviceId, retryCount)
-              → answer 수신 (맥락 반영된 단계 안내)
-                → MCP voice_guide(text=answer)
-                  → STOMP VOICE_GUIDE → Frontend TTS
-
-        AI 호출 실패 또는 빈 answer 수신 시 GUIDE_TEXT 딕셔너리로 폴백한다.
-
-        설계 배경:
-          이전 구현은 mode 구분 없이 /chat을 호출했기 때문에 AI 서버가
-          STEP 프롬프트를 서비스 선택 요청으로 오해해 "무엇을 도와드릴까요?"
-          같은 범용 응답을 돌려주는 문제가 있었다.
-          mode="step_guide"는 AI 서버에서 의도 분류를 건너뛰고
-          단계 안내 문구 생성에만 집중하도록 한다.
-        """
-        # 세션에서 누적 대화 기록 + 재시도 카운트 조회
         conversation_history = self.sessions.get_history(session_id)
         session_info = self.sessions.get(session_id) if hasattr(self.sessions, "get") else None
         service_id = getattr(session_info, "service_id", None) if session_info else None
 
-        # extra_context — 재시도 횟수, 이전 단계 등 부가 맥락
-        # SessionManager가 retry/prevStep을 지원하지 않으면 빈 dict로 전달
         extra_context: dict = {}
         if hasattr(self.sessions, "get_step_context"):
             try:
@@ -596,20 +535,19 @@ class KioskMainController:
         try:
             ai_raw = await asyncio.to_thread(
                 self.ai_http.chat,
-                "",                              # text는 step_guide 모드에서 미사용
+                "",                              
                 session_id,
                 "ko-KR",
                 conversation_history,
-                "step_guide",                    # mode
-                step,                            # step
-                self.current_user_type,          # user_type
-                service_id,                      # service_id
-                extra_context,                   # extra_context
+                "step_guide",                    
+                step,                            
+                self.current_user_type,          
+                service_id,                      
+                extra_context,                   
             )
             if isinstance(ai_raw, dict):
                 ai_answer = str(ai_raw.get("answer", "")).strip()
 
-                # 대화 기록 갱신 (AI 서버가 반환한 경우)
                 updated_history = ai_raw.get("conversation_history")
                 if isinstance(updated_history, list):
                     self.sessions.update_history(session_id, updated_history)
@@ -630,8 +568,6 @@ class KioskMainController:
                 step, e,
             )
 
-        # AI answer가 비어있으면 GUIDE_TEXT 폴백 경로로 진입
-        # _send_voice_guide 내부에서 override_text가 빈 문자열이면 GUIDE_TEXT 조회
         await self._send_voice_guide(
             session_id=session_id,
             context=step,
@@ -653,20 +589,12 @@ class KioskMainController:
         AI 서버가 발화에서 미리 추출한 값이 있는 단계에 대해,
         AI /chat 및 MCP voice_guide 호출 없이 Frontend에 autoAdvance 신호를 전송한다.
 
-        ELDERLY 모드에서는 즉시 스킵하지 않고 짧은 확인 음성(autoAdvanceGuide)을
-        포함하여 전송한다. Frontend는 TTS 완료 후 다음 단계로 진행해야 한다.
-
-        Parameters
-        ----------
-        session_id : str
-        step : str
-            prefilled로 판정된 STEP_CHANGE 키
-        prefilled_value : Any
-            세션에 저장된 해당 step의 값 (예: 1, "CASH")
+        v6.4 변경사항:
+        autoAdvance 전송 완료 후 세션에 남아있는 prefilled 필드를 삭제하여, 
+        사용자가 '이전' 버튼 클릭 시 동일한 단계에서 다시 스킵되는 무한 루프를 방지한다.
         """
         user_type = self.current_user_type
 
-        # ELDERLY 모드: 확인 음성 문구 생성 (즉시 스킵 금지)
         auto_advance_guide = ""
         if user_type == "ELDERLY":
             auto_advance_guide = self._make_elderly_auto_advance_guide(
@@ -678,10 +606,10 @@ class KioskMainController:
             "VOICE_GUIDE",
             {
                 "context":           step,
-                "guideText":         "",             # 스킵 단계는 안내 문구 없음
-                "autoAdvance":       True,           # Frontend에 즉시 다음 단계 신호
-                "prefilledValue":    prefilled_value, # UI 자동 입력값
-                "autoAdvanceGuide":  auto_advance_guide,  # ELDERLY 전용 확인 음성
+                "guideText":         "",             
+                "autoAdvance":       True,           
+                "prefilledValue":    prefilled_value, 
+                "autoAdvanceGuide":  auto_advance_guide,  
                 "audioUrl":          None,
                 "lang":              "ko-KR",
                 "userType":          user_type,
@@ -693,25 +621,12 @@ class KioskMainController:
             session_id, step, prefilled_value, auto_advance_guide,
         )
 
+        # 🚀 [v6.4 해결] 1회 전송 후 세션에 저장된 prefilled field를 제거하여 
+        # 사용자가 신청확인 등 다음 단계에서 '이전'을 클릭해 돌아왔을 때 무한 루프 차단
+        self.sessions.clear_prefilled_field(session_id, step)
+
     @staticmethod
     def _make_elderly_auto_advance_guide(step: str, value) -> str:
-        """
-        ELDERLY 모드 자동입력 확인 문구를 반환한다.
-
-        step별로 사람이 이해하기 쉬운 문구를 생성하며,
-        매핑이 없는 step은 범용 문구로 대체한다.
-
-        Parameters
-        ----------
-        step : str
-        value : Any
-            prefilled_value (표시용)
-
-        Returns
-        -------
-        str
-            TTS로 읽어줄 확인 문구
-        """
         templates: dict[str, str] = {
             "CERTIFICATE_SELECT_COUNT":   f"{value}부로 자동 설정했습니다.",
             "CERTIFICATE_SELECT_SCOPE":   f"공개 범위를 {value}(으)로 자동 설정했습니다.",
@@ -727,32 +642,17 @@ class KioskMainController:
         session_id: str,
         context: str,
         user_type: str,
-        override_text: str = "",            # AI 생성 답변 (있으면 우선 사용)
+        override_text: str = "",            
     ):
-        """
-        MCP voice_guide를 호출한 뒤 결과를 STOMP VOICE_GUIDE 커맨드로 전송한다.
-
-        우선순위:
-          1. override_text (AI /chat 이 생성한 answer)
-          2. MCP voice_guide 가 반환한 guideText
-          3. GUIDE_TEXT 딕셔너리 폴백
-
-        - audioUrl이 있으면 프론트가 오디오 파일을 직접 재생한다.
-        - audioUrl이 없으면 guideText를 프론트(또는 OS TTS)가 읽어준다.
-        - MCP 호출 실패 시 로컬 fallback 텍스트로 VOICE_GUIDE를 전송한다.
-        """
-        # override_text 가 있으면 그것을, 없으면 GUIDE_TEXT 폴백을 MCP에 전달
         fallback_text = override_text or _guide_text(context, user_type)
 
         try:
             guide_result = await self.mcp.voice_guide(
                 session_id=session_id,
-                text=fallback_text,             # AI answer 또는 폴백 문구 전달
+                text=fallback_text,             
                 user_type=user_type,
                 context=context,
             )
-            # MCP가 별도 guideText를 내려주면 그것을 우선 사용
-            # 단, override_text가 있을 때는 AI 답변을 보존
             guide_text = (
                 override_text
                 or guide_result.get("guideText", fallback_text)
@@ -779,7 +679,7 @@ class KioskMainController:
                 "lang":      lang,
                 "userType":  user_type,
             },
-            wait_ack=False,  # 음성 안내는 비blocking
+            wait_ack=False,  
         )
         logger.info(
             "VOICE_GUIDE 전송 — context=%s userType=%s text=%.40s… audioUrl=%s",
@@ -804,10 +704,6 @@ class KioskMainController:
     # ══════════════════════════════════════════════
 
     def _on_voice_input(self, payload: dict):
-        """
-        프론트 → STOMP VOICE_INPUT 수신.
-        STT 결과를 _handle_voice() 로 위임한다.
-        """
         data = payload.get("data", {})
         text = str(data.get("text", "")).strip()
 
@@ -830,14 +726,9 @@ class KioskMainController:
         """
         프론트 → STOMP STEP_CHANGE 수신.
 
-        v6.0 변경사항:
-          1. prefilled 확인 먼저 수행
-             · 채워진 단계 → _send_auto_advance (AI/MCP 호출 없이 autoAdvance 전송)
-             · 미충족 단계 → _handle_step_with_ai (기존 AI /chat 호출 흐름)
-          2. 기존 흐름:
-             GUIDE_TEXT 딕셔너리 직접 조회 → MCP voice_guide 전달
-             변경: AI /chat 호출(_handle_step_with_ai) → answer → MCP voice_guide 전달
-                  AI 실패 시 GUIDE_TEXT 폴백은 _handle_step_with_ai 내부에서 처리
+        v6.4 변경사항:
+          - 정의되지 않은 잘못된 단계명(UNKNOWN_STEP) 수신 시 AI /chat 호출을 사전에 차단하고, 
+            즉시 ERROR_RETRY 공통 폴백 문구를 담아 VOICE_GUIDE를Frontend로 재반환한다. (TC-FE-10 예외 규격 대응)
         """
         data = payload.get("data", {})
         session_id = data.get("sessionId")
@@ -847,10 +738,24 @@ class KioskMainController:
             logger.warning("STEP_CHANGE payload 누락 — session_id=%s step=%s", session_id, step)
             return
 
+        # 🚀 [v6.4 해결 / TC-FE-10 대응] 유효하지 않은 임의의 step 수신 시 예외 방어 및 에러 안내 폴백
+        if step not in GUIDE_TEXT:
+            logger.warning("알 수 없는 step 수신 (TC-FE-10): %s", step)
+            if self._loop and not self._loop.is_closed():
+                self._loop.call_soon_threadsafe(
+                    lambda: self._loop.create_task(
+                        self._send_voice_guide(
+                            session_id=session_id,
+                            context="ERROR_RETRY",
+                            user_type=self.current_user_type
+                        )
+                    )
+                )
+            return
+
         self.sessions.touch(session_id)  # 활동 시각 갱신
 
         if self._loop and not self._loop.is_closed():
-            # v6.0: prefilled 여부에 따라 처리 경로 분기
             if self.sessions.is_step_prefilled(session_id, step):
                 prefilled_value = self.sessions.get_prefilled_value(session_id, step)
                 logger.info(
