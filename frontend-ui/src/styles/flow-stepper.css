@@ -1,0 +1,210 @@
+/* 공통 모드바 + 작은 점 진행단계 UI */
+.mode-bar {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-row-gap);
+  margin: 0;
+}
+
+.main-mode-bar-wrap {
+  margin-top: auto;
+  padding-top: var(--space-section-gap);
+  display: flex;
+  width: 100%;
+}
+
+.flow-screen-stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.flow-mode-bar-wrap {
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 0 0 42px;
+}
+
+.mode-button {
+  min-width: var(--pill-main-width);
+  min-height: var(--pill-main-height);
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-fill);
+  color: var(--color-text-muted);
+  font-size: var(--font-pill-main);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  cursor: pointer;
+}
+
+.mode-button.active {
+  background: var(--color-blue);
+  color: #ffffff;
+}
+
+.mode-button:focus-visible {
+  outline: 5px solid rgba(48, 149, 237, 0.28);
+  outline-offset: 4px;
+}
+
+.flow-header {
+  margin: 0 0 54px;
+}
+
+.flow-step-title {
+  margin: 0 0 24px;
+  font-size: var(--font-title);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+  word-break: keep-all;
+}
+
+.flow-guide-text {
+  margin: 0 0 24px;
+  font-size: var(--font-field-label);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: var(--color-text);
+  word-break: keep-all;
+}
+
+.screen-frame .progress-steps,
+.screen-frame .transfer-panel .progress-steps,
+.screen-frame .resident-panel .progress-steps,
+.screen-frame.low-screen .progress-steps,
+.screen-frame.low-screen .transfer-panel .progress-steps,
+.screen-frame.low-screen .resident-panel .progress-steps,
+.screen-frame.large-font .transfer-panel .progress-steps,
+.screen-frame.large-font .resident-panel .progress-steps,
+.screen-frame.low-screen.large-font .progress-steps,
+.screen-frame.low-screen.large-font .transfer-panel .progress-steps,
+.screen-frame.low-screen.large-font .resident-panel .progress-steps {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  margin: 0;
+  width: 100%;
+}
+
+.step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #cfcfcf;
+  background: #ffffff;
+  display: inline-block;
+}
+
+.step-dot.completed {
+  border-color: var(--color-blue);
+  background: var(--color-blue);
+}
+
+.step-dot.current {
+  width: 28px;
+  height: 28px;
+  border-color: var(--color-blue);
+  background: var(--color-blue);
+  box-shadow: 0 0 0 7px rgba(48, 149, 237, 0.15);
+}
+
+.step-dot.upcoming {
+  border-color: #cfcfcf;
+  background: #ffffff;
+}
+
+/* 이전 큰 원형 단계 스타일과 충돌하지 않도록 무력화 */
+.step-item,
+.step-circle {
+  display: none;
+}
+
+/* 작은 단계바로 바뀐 만큼 본문을 위로 올림 */
+.resident-panel .content-body-frame,
+.transfer-panel .content-body-frame {
+  margin-top: 0;
+}
+
+/* 메인 화면에서는 모드바를 하단에 고정하고, 제목은 기존 위치를 유지 */
+.hero-title-box {
+  margin-top: 8px;
+}
+
+/* 고대비 모드에서도 현재 단계와 선택 모드가 분명하게 보이도록 처리 */
+.screen-frame.high-contrast .mode-button {
+  background: #ffffff;
+  color: #111111;
+  box-shadow: inset 0 0 0 2px #777777;
+}
+
+.screen-frame.high-contrast .mode-button.active {
+  background: var(--color-yellow, #ffff08);
+  color: #111111;
+  box-shadow: inset 0 0 0 3px #111111;
+}
+
+.screen-frame.high-contrast .step-dot {
+  border-color: #777777;
+  background: #ffffff;
+}
+
+.screen-frame.high-contrast .step-dot.completed,
+.screen-frame.high-contrast .step-dot.current {
+  border-color: #111111;
+  background: var(--color-yellow, #ffff08);
+}
+
+/* 확대 모드: 원래 접근성 버튼 크기 토큰을 그대로 따름 */
+.screen-frame.large-font .flow-header {
+  margin-bottom: 48px;
+}
+
+/* 낮은화면: 진행 화면 전체가 내려가고, 그 안에서 모드바가 최상단에 위치 */
+.screen-frame.low-screen .flow-screen-stack {
+  padding-top: var(--low-screen-title-offset);
+}
+
+.screen-frame.low-screen .flow-screen-stack .content-panel {
+  padding-top: 0;
+}
+
+.screen-frame.low-screen .flow-mode-bar-wrap {
+  margin-bottom: 26px;
+}
+
+.screen-frame.low-screen .flow-header {
+  margin-bottom: 34px;
+}
+
+.screen-frame.low-screen .flow-step-title {
+  margin-bottom: 18px;
+}
+
+.screen-frame.low-screen .flow-guide-text {
+  margin-bottom: 18px;
+}
+
+.screen-frame.low-screen .step-dot {
+  width: 16px;
+  height: 16px;
+}
+
+.screen-frame.low-screen .step-dot.current {
+  width: 24px;
+  height: 24px;
+  box-shadow: 0 0 0 6px rgba(48, 149, 237, 0.15);
+}
+
+.screen-frame.voice-mode .mode-button.active {
+  box-shadow: 0 0 0 5px rgba(255, 159, 10, 0.28);
+}
