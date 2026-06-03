@@ -303,3 +303,1079 @@
   font-weight: 600;
   font-size: var(--font-status);
 }
+/* 전입신고 화면 컴포넌트 */
+.transfer-card-title {
+  margin: 0 0 38px;
+  font-size: var(--font-field-label);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.transfer-card-title span,
+.transfer-field-label span,
+.transfer-sub-label span {
+  font-weight: 500;
+  color: var(--color-text-soft);
+}
+
+.transfer-field-label,
+.transfer-sub-label {
+  display: block;
+  margin: 0 0 18px;
+  font-size: calc(var(--font-field-label) * 0.76);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.transfer-input {
+  width: 100%;
+  min-height: 92px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0 28px;
+  font-size: calc(var(--font-input) * 0.72);
+  font-weight: 500;
+  outline: none;
+}
+
+.transfer-input.readonly {
+  background: var(--color-fill);
+  color: var(--color-text-muted);
+}
+
+.phone-input {
+  width: 260px;
+  text-align: center;
+}
+
+.transfer-hyphen {
+  font-size: calc(var(--font-input) * 0.7);
+  font-weight: 700;
+}
+
+.transfer-select {
+  appearance: auto;
+  cursor: pointer;
+}
+
+.transfer-select.full {
+  width: 100%;
+}
+
+.base-address-input {
+  flex: 1;
+}
+
+.detail-address-input {
+  width: 100%;
+}
+
+.transfer-search-button {
+  min-width: 160px;
+  min-height: 92px;
+  border: 3px solid var(--color-blue);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  color: var(--color-blue);
+  font-size: calc(var(--font-input) * 0.68);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.transfer-search-button.wide {
+  min-width: 170px;
+}
+
+.transfer-option-button {
+  width: 100%;
+  min-height: 72px;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 600;
+  line-height: 1.25;
+  cursor: pointer;
+  word-break: keep-all;
+}
+
+.transfer-option-button.selected {
+  color: var(--color-blue);
+}
+
+.fake-radio,
+.fake-checkbox {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #8e8e8e;
+  background: var(--color-surface);
+}
+
+.fake-radio {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+}
+
+.fake-radio.checked {
+  border-color: var(--color-blue);
+}
+
+.fake-radio.checked::after {
+  content: '';
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-blue);
+}
+
+.fake-checkbox {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+}
+
+.fake-checkbox.checked {
+  border-color: var(--color-blue);
+  background: var(--color-blue);
+}
+
+.fake-checkbox.checked::after {
+  content: '✓';
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.transfer-info-table {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  font-size: calc(var(--font-summary) * 0.68);
+}
+
+.transfer-table-label,
+.transfer-table-value {
+  min-height: 86px;
+  border-right: 2px solid var(--color-line);
+  border-bottom: 2px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  padding: 20px 26px;
+  word-break: keep-all;
+}
+
+.transfer-table-label {
+  background: #f1f6fb;
+  font-weight: 800;
+}
+
+.transfer-person-table {
+  display: grid;
+  grid-template-columns: 80px 1.35fr 1.3fr 1.35fr 0.9fr;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  width: 100%;
+  font-size: calc(var(--font-summary) * 0.62);
+}
+
+.transfer-person-head,
+.transfer-person-cell {
+  min-height: 86px;
+  border-right: 2px solid var(--color-line);
+  border-bottom: 2px solid var(--color-line);
+  display: flex;
+  align-items: center;
+  padding: 16px 22px;
+  word-break: keep-all;
+}
+
+.transfer-person-head {
+  background: #f1f6fb;
+  font-weight: 800;
+}
+
+.transfer-person-cell.selectable-cell {
+  background: transparent;
+  cursor: pointer;
+}
+
+.transfer-person-head.select-col,
+.transfer-person-cell.select-col {
+  justify-content: center;
+  padding: 10px;
+}
+
+.text-blue {
+  color: var(--color-blue);
+}
+
+.building-help-button {
+  display: block;
+  margin: 0 0 34px auto;
+  border: none;
+  border-bottom: 2px solid var(--color-text-soft);
+  background: transparent;
+  color: var(--color-text-soft);
+  font-size: calc(var(--font-summary) * 0.7);
+  cursor: pointer;
+}
+
+.transfer-notice {
+  margin: 28px 0 0;
+  color: var(--color-text-soft);
+  font-size: calc(var(--font-summary) * 0.55);
+  font-weight: 500;
+  line-height: 1.55;
+  word-break: keep-all;
+}
+
+.transfer-notice strong {
+  color: var(--color-blue);
+}
+
+.transfer-notice span {
+  color: #e21b2d;
+  font-weight: 800;
+}
+
+.transfer-extra-row {
+  width: 100%;
+  min-height: 94px;
+  border: 2px solid var(--color-line);
+  background: #f1f6fb;
+  color: var(--color-text);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 24px;
+  font-size: calc(var(--font-field-label) * 0.62);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  word-break: keep-all;
+}
+
+.transfer-extra-row.selected {
+  border-color: var(--color-blue);
+}
+
+.transfer-row-arrow {
+  font-size: calc(var(--font-field-label) * 0.9);
+  color: var(--color-text-soft);
+}
+
+/* 전입신고 분할 페이지 추가 컴포넌트 */
+.transfer-resident-input {
+  width: 260px;
+  min-height: 92px;
+  font-size: calc(var(--font-input) * 0.72);
+  justify-content: center;
+}
+
+.transfer-keypad-wrap .keypad-button {
+  font-size: calc(var(--font-keypad) * 0.72);
+}
+
+.phone-block {
+  margin-top: 18px;
+}
+
+.transfer-summary-block {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  padding: 24px;
+  background: var(--color-surface);
+}
+
+.transfer-summary-block h4 {
+  margin: 0 0 18px;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.transfer-summary-block p {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-size: calc(var(--font-summary) * 0.55);
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.transfer-summary-block p:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-summary-block strong {
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
+
+.transfer-summary-block span {
+  white-space: pre-line;
+}
+
+.transfer-summary-block ul {
+  margin: 0;
+  padding-left: 24px;
+  font-size: calc(var(--font-summary) * 0.55);
+  line-height: 1.45;
+}
+
+.transfer-summary-block li + li {
+  margin-top: 8px;
+}
+
+/* 전입신고 v4: 입력창 선택 후 키보드/키패드 노출 */
+.transfer-panel .step-circle {
+  width: min(var(--step-size), 160px);
+  height: min(var(--step-size), 160px);
+  font-size: calc(var(--font-progress) * 0.78);
+  white-space: pre-line;
+}
+
+.transfer-panel .progress-steps {
+  gap: 16px;
+  margin-bottom: 62px;
+}
+
+.identity-input-card .transfer-input {
+  background: var(--color-surface);
+}
+
+.name-input {
+  background: var(--color-surface);
+  border-color: var(--color-line);
+}
+
+.input-like-button {
+  border: 2px solid var(--color-line);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.input-like-button:focus-visible,
+.transfer-input:focus-visible {
+  outline: 5px solid rgba(48, 149, 237, 0.28);
+  outline-offset: 3px;
+}
+
+.transfer-keyboard-panel {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.transfer-keyboard-panel .keypad-grid {
+  transform-origin: left top;
+  transform: scale(0.72);
+  margin-bottom: -110px;
+}
+
+.text-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.text-keyboard-row {
+  display: flex;
+  gap: 14px;
+}
+
+.text-keyboard-button {
+  min-width: 95px;
+  min-height: 76px;
+  border: none;
+  border-radius: var(--radius-keypad);
+  background: var(--color-fill);
+  color: var(--color-text);
+  font-size: calc(var(--font-keypad) * 0.45);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.text-keyboard-button.wide {
+  min-width: 180px;
+}
+
+.previous-info-card + .moving-member-card {
+  margin-top: 10px;
+}
+
+/* 전입신고 v5: 키보드/키패드 입력 방식 수정 */
+.identity-input-card {
+  position: relative;
+}
+
+.name-input,
+.phone-input {
+  cursor: pointer;
+}
+
+.phone-input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  padding: 0 12px;
+}
+
+.fixed-phone-input {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.identity-input-card .transfer-resident-row {
+  flex-wrap: nowrap;
+}
+
+.transfer-keyboard-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 210px;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: min(900px, calc(100% - 110px));
+  margin: 0;
+  padding: 26px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.16);
+}
+
+.transfer-keyboard-panel .keypad-grid {
+  width: min(620px, 100%);
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 auto;
+  transform: none;
+}
+
+.transfer-keyboard-panel .keypad-button,
+.transfer-keyboard-panel .keypad-button.small {
+  width: 100%;
+  height: 86px;
+  font-size: calc(var(--font-keypad) * 0.72);
+}
+
+.text-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.text-keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.text-keyboard-button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 68px;
+  border: none;
+  border-radius: var(--radius-keypad);
+  background: var(--color-fill);
+  color: var(--color-text);
+  font-size: calc(var(--font-keypad) * 0.42);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.text-keyboard-button.wide {
+  flex: 0 1 220px;
+  min-width: 150px;
+}
+
+/* 전입신고 v6: 주민등록번호/휴대전화번호 하이픈 두께 통일 */
+.transfer-resident-row .hyphen,
+.transfer-phone-row .transfer-hyphen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  font-size: calc(var(--font-input) * 0.7);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+/* 전입신고 v7: 키패드 완료 버튼 / 입력 미리보기 / 확대 정렬 보정 */
+.keypad-button.done {
+  font-size: calc(var(--font-keypad) * 0.42);
+  font-weight: 800;
+}
+
+.transfer-address-search-row {
+  margin-bottom: 18px;
+}
+
+.transfer-info-table.address-table {
+  margin-top: 0;
+}
+
+.keyboard-preview {
+  width: 100%;
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+}
+
+.keyboard-preview-label {
+  margin: 0 0 12px;
+  font-size: calc(var(--font-field-label) * 0.6);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.keyboard-preview-label span {
+  font-weight: 500;
+  color: var(--color-text-soft);
+}
+
+.keyboard-preview-phone-row,
+.keyboard-preview-resident-row {
+  display: grid;
+  align-items: center;
+  gap: 12px;
+}
+
+.keyboard-preview-phone-row {
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr) 22px minmax(0, 1fr);
+}
+
+.keyboard-preview-resident-row {
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+}
+
+.keyboard-preview-text-row {
+  display: block;
+}
+
+.keyboard-preview-input {
+  min-height: 70px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  font-size: calc(var(--font-input) * 0.62);
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.keyboard-preview-input.active {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 4px rgba(48, 149, 237, 0.14);
+}
+
+.keyboard-preview-input.text-preview-input {
+  justify-content: flex-start;
+  min-height: 64px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.screen-frame.large-font .transfer-resident-input {
+  width: 340px;
+  font-size: calc(var(--font-input) * 0.66);
+}
+
+.screen-frame.large-font .transfer-info-table {
+  font-size: calc(var(--font-summary) * 0.72);
+}
+
+.screen-frame.large-font .transfer-person-table {
+  font-size: calc(var(--font-summary) * 0.66);
+}
+
+.screen-frame.large-font .transfer-table-label,
+.screen-frame.large-font .transfer-table-value,
+.screen-frame.large-font .transfer-person-head,
+.screen-frame.large-font .transfer-person-cell {
+  min-height: 96px;
+  padding: 20px 24px;
+}
+
+.screen-frame.large-font .transfer-option-button {
+  font-size: calc(var(--font-field-label) * 0.76);
+  min-height: 86px;
+}
+
+.screen-frame.large-font .transfer-extra-row {
+  font-size: calc(var(--font-field-label) * 0.68);
+  min-height: 108px;
+}
+
+/* 전입신고 v8: 확대 모드 신청정보 요약 겹침 방지 + 완료 버튼 크기 조정 */
+.keypad-button.done {
+  font-size: calc(var(--font-keypad) * 0.34);
+  letter-spacing: -0.04em;
+}
+
+.transfer-summary-block p {
+  grid-template-columns: minmax(160px, 0.44fr) minmax(0, 1fr);
+  column-gap: 22px;
+}
+
+.transfer-summary-block p > span,
+.transfer-summary-block li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.screen-frame.large-font .transfer-summary-block {
+  padding: 26px;
+}
+
+.screen-frame.large-font .transfer-summary-block h4 {
+  font-size: calc(var(--font-field-label) * 0.68);
+  line-height: 1.15;
+}
+
+.screen-frame.large-font .transfer-summary-block p {
+  grid-template-columns: 190px minmax(0, 1fr);
+  column-gap: 18px;
+  font-size: calc(var(--font-summary) * 0.48);
+  line-height: 1.38;
+}
+
+.screen-frame.large-font .transfer-summary-block ul {
+  font-size: calc(var(--font-summary) * 0.48);
+  line-height: 1.38;
+}
+
+/* 전입신고 v9: 신청 정보 요약 색상 구분 + 완료 버튼 크기 강제 보정 */
+.transfer-summary-block h4 {
+  color: #1f63a3;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #dcedff;
+}
+
+.transfer-summary-block strong {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-left: 5px solid var(--color-blue);
+  border-radius: 6px;
+  background: #eef7ff;
+  color: #1f63a3;
+  font-weight: 800;
+}
+
+.transfer-summary-block span {
+  color: #111111;
+  font-weight: 500;
+}
+
+.transfer-summary-block li {
+  color: #111111;
+  font-weight: 500;
+}
+
+.transfer-summary-block li::marker {
+  color: #1f63a3;
+}
+
+.keypad-button.done,
+.transfer-keyboard-panel .keypad-button.done,
+.transfer-keyboard-panel .keypad-button.small.done {
+  font-size: calc(var(--font-keypad) * 0.36) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.05em;
+  font-weight: 800;
+}
+
+/* 전입신고 v12: 이름 입력 키보드 쉬프트 키 */
+.text-keyboard-button.control {
+  font-size: calc(var(--font-keypad) * 0.34);
+  letter-spacing: -0.04em;
+}
+
+.text-keyboard-button.shift-active {
+  background: var(--color-blue);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(48, 149, 237, 0.16);
+}
+
+.screen-frame.high-contrast .text-keyboard-button.shift-active {
+  background: #ffff00;
+  color: #000000;
+  border-color: #ffff00;
+  box-shadow: none;
+}
+
+/* 주민등록등본(초본) 화면 컴포넌트: 전입신고와 동일한 디자인 언어 */
+.resident-card-title {
+  margin: 0 0 38px;
+  font-size: var(--font-field-label);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.resident-card-title span,
+.resident-field-label span,
+.resident-sub-label span {
+  font-weight: 500;
+  color: var(--color-text-soft);
+}
+
+.resident-field-label,
+.resident-sub-label {
+  display: block;
+  margin: 0 0 18px;
+  font-size: calc(var(--font-field-label) * 0.76);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+}
+
+.resident-choice-button,
+.resident-option-button,
+.resident-check-row {
+  width: 100%;
+  min-height: 92px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 700;
+  text-align: left;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+  cursor: pointer;
+}
+
+.resident-choice-button {
+  min-height: 128px;
+  justify-content: center;
+  text-align: center;
+  font-size: calc(var(--font-large-choice) * 0.72);
+}
+
+.resident-choice-button.selected,
+.resident-option-button.selected,
+.resident-check-row.selected {
+  border-color: var(--color-blue);
+  background: var(--color-light-blue);
+  color: var(--color-text);
+  box-shadow: 0 8px 22px rgba(48, 149, 237, 0.14);
+}
+
+.resident-choice-button:active,
+.resident-option-button:active,
+.resident-check-row:active {
+  transform: translateY(1px);
+}
+
+.resident-number-input {
+  width: var(--resident-width);
+  min-height: var(--resident-height);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.resident-hyphen,
+.resident-count-unit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  font-size: calc(var(--font-input) * 0.7);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.resident-count-input {
+  width: var(--count-width);
+  min-height: var(--count-height);
+  justify-content: flex-end;
+  padding-right: 18px;
+  font-size: var(--font-input);
+}
+
+.resident-summary-block {
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  padding: 30px;
+  min-width: 0;
+}
+
+.resident-summary-block h4 {
+  margin: 0 0 22px;
+  color: #1f63a3;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #dcedff;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.resident-summary-block p {
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.44fr) minmax(0, 1fr);
+  column-gap: 22px;
+  align-items: start;
+  font-size: calc(var(--font-summary) * 0.55);
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+}
+
+.resident-summary-block p:last-child {
+  margin-bottom: 0;
+}
+
+.resident-summary-block strong {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-left: 5px solid var(--color-blue);
+  border-radius: 6px;
+  background: #eef7ff;
+  color: #1f63a3;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.resident-summary-block span,
+.resident-summary-block li {
+  min-width: 0;
+  color: #111111;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.resident-summary-block ul {
+  margin: 12px 0 0;
+  padding-left: 28px;
+  font-size: calc(var(--font-summary) * 0.55);
+  line-height: 1.45;
+  letter-spacing: -0.03em;
+}
+
+.resident-summary-block li + li {
+  margin-top: 8px;
+}
+
+.resident-summary-block li::marker {
+  color: #1f63a3;
+}
+
+.resident-total-fee-text {
+  font-weight: 800 !important;
+  color: #1f63a3 !important;
+}
+
+.screen-frame.large-font .resident-summary-block h4 {
+  font-size: calc(var(--font-field-label) * 0.68);
+}
+
+.screen-frame.large-font .resident-summary-block p,
+.screen-frame.large-font .resident-summary-block ul {
+  font-size: calc(var(--font-summary) * 0.48);
+  line-height: 1.38;
+}
+
+/* v2: 전입신고/주민등록등본 라디오·체크박스 선택 행 디자인 통일 */
+.transfer-option-button,
+.resident-option-button,
+.resident-check-row {
+  width: 100%;
+  min-height: 92px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 28px;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  text-align: left;
+  word-break: keep-all;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.transfer-option-button.selected,
+.resident-option-button.selected,
+.resident-check-row.selected {
+  border-color: var(--color-blue);
+  background: var(--color-light-blue);
+  color: var(--color-text);
+  box-shadow: 0 8px 22px rgba(48, 149, 237, 0.14);
+}
+
+.transfer-option-button:active,
+.resident-option-button:active,
+.resident-check-row:active,
+.transfer-extra-row:active {
+  transform: translateY(1px);
+}
+
+.transfer-extra-row {
+  width: 100%;
+  min-height: 92px;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-box);
+  background: var(--color-surface);
+  color: var(--color-text);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 28px;
+  font-size: calc(var(--font-field-label) * 0.72);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  text-align: left;
+  word-break: keep-all;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.transfer-extra-row.selected {
+  border-color: var(--color-blue);
+  background: var(--color-light-blue);
+  color: var(--color-text);
+  box-shadow: 0 8px 22px rgba(48, 149, 237, 0.14);
+}
+
+.transfer-row-arrow {
+  margin-left: auto;
+  color: var(--color-text-soft);
+}
+
+.transfer-option-button .fake-radio,
+.transfer-option-button .fake-checkbox,
+.transfer-extra-row .fake-radio,
+.transfer-extra-row .fake-checkbox,
+.resident-option-button .fake-radio,
+.resident-option-button .fake-checkbox,
+.resident-check-row .fake-radio,
+.resident-check-row .fake-checkbox {
+  flex: 0 0 auto;
+}
+
+
+/* 전입신고 v13: 이름 입력 키보드 한/영·숫자·기호 모드 추가 */
+.text-keyboard-button.mode-key {
+  flex: 0.75 1 0;
+  font-size: calc(var(--font-keypad) * 0.3);
+}
+
+.text-keyboard-button.space-key {
+  flex: 2.2 1 0;
+}
+
+.text-keyboard-button.mode-active {
+  background: var(--color-fill);
+  color: var(--color-text);
+  box-shadow: none;
+}
+
+.screen-frame.high-contrast .text-keyboard-button.mode-active {
+  background: #d9d9d9;
+  color: #111111;
+  box-shadow: none;
+}
+
+/* v14: 키패드/키보드 지우기 키 아이콘 */
+.delete-key-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-key-icon {
+  display: block;
+  color: currentColor;
+  flex: 0 0 auto;
+}
+
+.keypad-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.72);
+  height: calc(var(--font-keypad) * 0.72);
+}
+
+.text-keyboard-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.42);
+  height: calc(var(--font-keypad) * 0.42);
+}
+
+.screen-frame.low-screen .keypad-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.62);
+  height: calc(var(--font-keypad) * 0.62);
+}
+
+.screen-frame.low-screen .text-keyboard-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.38);
+  height: calc(var(--font-keypad) * 0.38);
+}
+
+.screen-frame.low-screen.large-font .keypad-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.58);
+  height: calc(var(--font-keypad) * 0.58);
+}
+
+.screen-frame.low-screen.large-font .text-keyboard-button.delete-key-button .delete-key-icon {
+  width: calc(var(--font-keypad) * 0.34);
+  height: calc(var(--font-keypad) * 0.34);
+}
+

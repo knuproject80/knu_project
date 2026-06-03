@@ -1,5 +1,3 @@
-import { ACCESSIBILITY_ACTIONS } from '../data/options';
-
 function chunkButtons(items, perRow = 3) {
   const rows = [];
   for (let i = 0; i < items.length; i += perRow) {
@@ -8,26 +6,10 @@ function chunkButtons(items, perRow = 3) {
   return rows;
 }
 
-function getAccessibilityActiveState(actionKey, accessibility = {}) {
-  switch (actionKey) {
-    case 'highContrast':
-      return accessibility.highContrast;
-    case 'largeFont':
-      return accessibility.largeFont;
-    case 'lowScreenMode':
-      return accessibility.lowScreenMode;
-    case 'voiceMode':
-      return accessibility.voiceMode;
-    default:
-      return false;
-  }
-}
 
 export default function MainScreen({
   categories,
   onSelectService,
-  onAccessibilityAction,
-  accessibility = {},
 }) {
   return (
     <>
@@ -60,24 +42,6 @@ export default function MainScreen({
             </div>
           </section>
         ))}
-      </div>
-
-      <div className="accessibility-bar">
-        {ACCESSIBILITY_ACTIONS.map((action) => {
-          const isActive = getAccessibilityActiveState(action.key, accessibility);
-
-          return (
-            <button
-              key={action.key}
-              type="button"
-              className={`pill-button accessibility-button ${isActive ? 'active-accessibility' : ''}`}
-              onClick={() => onAccessibilityAction(action.key)}
-              aria-pressed={isActive}
-            >
-              {action.label}
-            </button>
-          );
-        })}
       </div>
     </>
   );

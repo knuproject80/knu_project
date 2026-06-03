@@ -13,6 +13,7 @@
   color: var(--color-text);
   font-size: var(--font-base);
   overflow: hidden;
+  position: relative;
 }
 
 .screen-inner {
@@ -120,7 +121,7 @@
 
 .progress-steps {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--progress-step-count, 4), 1fr);
   gap: 25px;
   margin-bottom: var(--space-progress-bottom);
 }
@@ -167,4 +168,182 @@
   font-size: var(--font-input);
   font-weight: 700;
   align-self: flex-end;
+}
+
+
+/* 전입신고 화면 레이아웃 */
+.transfer-panel .progress-steps {
+  margin-bottom: 70px;
+}
+
+.transfer-body {
+  width: 100%;
+  max-width: 980px;
+  gap: 38px;
+}
+
+.transfer-card {
+  width: 100%;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 42px;
+  background: var(--color-surface);
+}
+
+.transfer-field-block {
+  margin-bottom: 40px;
+}
+
+.transfer-field-block:last-child {
+  margin-bottom: 0;
+}
+
+.transfer-phone-row,
+.transfer-address-search-row,
+.transfer-address-input-row,
+.transfer-number-grid {
+  display: flex;
+  align-items: center;
+  gap: var(--space-row-gap);
+}
+
+.transfer-address-search-row,
+.transfer-address-input-row {
+  width: 100%;
+}
+
+.transfer-number-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  align-items: end;
+}
+
+.transfer-reason-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 40px;
+}
+
+.transfer-radio-list.compact {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.transfer-current-body {
+  gap: 26px;
+}
+
+.transfer-extra-list {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* 전입신고 분할 페이지 보조 레이아웃 */
+.transfer-resident-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-row-gap);
+}
+
+.transfer-keypad-wrap {
+  margin: 20px 0 38px;
+}
+
+.transfer-keypad-wrap .keypad-grid {
+  transform-origin: left top;
+  transform: scale(0.78);
+  margin-bottom: -110px;
+}
+
+.transfer-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+
+/* 전입신고 v5: 입력 키보드가 화면 하단을 덮도록 배치 */
+.identity-input-card .transfer-phone-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  width: 100%;
+  align-items: center;
+}
+
+/* 전입신고 v6: 현재주소 번호 입력칸 정렬 보정 */
+.transfer-number-grid .transfer-field-block {
+  margin-bottom: 0;
+}
+
+.transfer-number-grid .transfer-field-label {
+  min-height: 42px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.transfer-number-grid .transfer-input,
+.transfer-number-grid .transfer-select.full {
+  min-height: 92px;
+}
+
+/* 주민등록등본(초본) 화면 레이아웃: 전입신고와 같은 카드 기반 규칙 */
+.resident-panel .progress-steps {
+  margin-bottom: 70px;
+}
+
+.resident-body {
+  width: 100%;
+  max-width: 980px;
+  gap: 38px;
+}
+
+.resident-card {
+  width: 100%;
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 42px;
+  background: var(--color-surface);
+}
+
+.resident-choice-list,
+.resident-option-list,
+.resident-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.resident-option-list {
+  margin-bottom: 30px;
+}
+
+.resident-field-block {
+  margin-bottom: 40px;
+}
+
+.resident-field-block:last-child {
+  margin-bottom: 0;
+}
+
+.resident-number-row,
+.resident-copy-count-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-row-gap);
+}
+
+.resident-keypad-wrap {
+  margin-top: 18px;
+}
+
+.resident-keypad-wrap .keypad-grid {
+  margin: 0 auto;
+}
+
+.resident-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
 }
