@@ -1,0 +1,200 @@
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='USER_TOUCH'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='SERVICE_COMPLETE'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='UI_ACK'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='USER_CANCEL'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='VOICE_INPUT'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='STEP_CHANGE'
+2026-06-04 18:02:21 [stomp_manager] INFO  핸들러 등록: action='TOUCH_SERVICE'
+2026-06-04 18:02:21 [stomp_manager] INFO  WebSocket 연결 시도: ws://localhost:8080/ws
+2026-06-04 18:02:21 [stomp_manager] INFO  WebSocket/STOMP 연결 성공
+2026-06-04 18:02:21 [stomp_manager] INFO  구독 등록: /topic/front/events
+2026-06-04 18:02:21 [stomp_manager] INFO  구독 등록: /topic/front/ack
+2026-06-04 18:02:21 [session_manager] INFO  세션 매니저 시작 — 정리 주기: 30s
+2026-06-04 18:02:21 [kiosk.main] INFO  키오스크 컨트롤러 기동 완료
+2026-06-04 18:02:27 [stomp_manager] INFO  수신 ← [/topic/front/events] action=TOUCH_SERVICE
+2026-06-04 18:02:27 [kiosk.main] INFO  STOMP TOUCH_SERVICE 수신 — serviceId=resident-copy
+2026-06-04 18:02:27 [mcp_client] INFO  [MCP] start_session 호출 — userType=NORMAL
+2026-06-04 18:02:28 [kiosk.mcp_server] INFO  Ű����ũ MCP Server �⵿ \u2014 stdio ���
+2026-06-04 18:02:28 [mcp_client] INFO  MCP 서버 연결 성공
+2026-06-04 18:02:28 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:28 [kiosk.mcp_server] INFO  [MCP] start_session �Ϸ� \u2014 sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 userType=NORMAL
+2026-06-04 18:02:28 [mcp.server.lowlevel.server] INFO  Processing request of type ListToolsRequest
+2026-06-04 18:02:28 [mcp_client] INFO  [MCP] start_session 완료 — sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3
+2026-06-04 18:02:28 [session_manager] INFO  세션 생성: 8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 (유형: NORMAL)
+2026-06-04 18:02:28 [stomp_manager] INFO  송신 → [/topic/ui/global] action=SESSION_ASSIGNED commandId=facf8849-8ecb-46ff-9187-96a318b5d3fd
+2026-06-04 18:02:31 [stomp_manager] WARNING  ACK 타임아웃: action=SESSION_ASSIGNED commandId=facf8849-8ecb-46ff-9187-96a318b5d3fd
+2026-06-04 18:02:31 [kiosk.main] WARNING  SESSION_ASSIGNED ACK 미수신 — 프론트 구독 지연 가능성 있음 (sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3). 계속 진행합니다.
+2026-06-04 18:02:31 [mcp_client] INFO  [MCP] voice_guide 호출 — sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?…
+2026-06-04 18:02:31 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:31 [kiosk.mcp_server] INFO  [MCP] voice_guide �Ϸ� \u2014 sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 context=SESSION_START userType=NORMAL text=�ȳ��ϼ���. ������ ���͵帱���?��
+2026-06-04 18:02:31 [mcp_client] INFO  [MCP] voice_guide 완료 — guideText=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+2026-06-04 18:02:31 [stomp_manager] INFO  송신 → [/topic/ui/8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3] action=VOICE_GUIDE commandId=d2e592f5-7671-44fd-b8ad-8877a0f18cd6
+2026-06-04 18:02:31 [kiosk.main] INFO  VOICE_GUIDE 전송 — context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+TypeError: %d format: a real number is required, not str
+Call stack:
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 910, in <module>
+    asyncio.run(main())
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 683, in run_forever
+    self._run_once()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 2061, in _run_once
+    handle._run()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 401, in _handle_touch
+    await self._execute_service(service_id)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 463, in _execute_service
+    service_result = await self.mcp.start_service(
+  File "C:\knu_project\mcp-server\mcp_client\mcp_client.py", line 303, in start_service
+    logger.info(
+Message: '[MCP] start_service 호출 — sessionId=%s serviceId=%d userType=%s'
+Arguments: ('8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3', 'resident-copy', 'NORMAL')
+2026-06-04 18:02:31 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:31 [kiosk.main] ERROR  [MCP start_service 응답 오류] MCP 'start_service' 서버 오류: Input validation error: 'resident-copy' is not of type 'integer'
+2026-06-04 18:02:31 [mcp_client] INFO  [MCP] end_session 호출 — sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 reason=ERROR
+2026-06-04 18:02:31 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:31 [kiosk.mcp_server] INFO  [MCP] end_session �Ϸ� \u2014 sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 reason=ERROR
+2026-06-04 18:02:31 [mcp_client] INFO  [MCP] end_session 완료 — sessionId=8f8ea58d-2827-43b5-8c28-41ab3b1f6ae3 status=CLOSED
+2026-06-04 18:02:37 [stomp_manager] INFO  수신 ← [/topic/front/events] action=TOUCH_SERVICE
+2026-06-04 18:02:37 [kiosk.main] INFO  STOMP TOUCH_SERVICE 수신 — serviceId=resident-copy
+2026-06-04 18:02:37 [mcp_client] INFO  [MCP] start_session 호출 — userType=NORMAL
+2026-06-04 18:02:37 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:37 [kiosk.mcp_server] INFO  [MCP] start_session �Ϸ� \u2014 sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 userType=NORMAL
+2026-06-04 18:02:37 [mcp_client] INFO  [MCP] start_session 완료 — sessionId=5e48505e-c6af-403b-96df-49f1405d9a27
+2026-06-04 18:02:37 [session_manager] INFO  세션 생성: 5e48505e-c6af-403b-96df-49f1405d9a27 (유형: NORMAL)
+2026-06-04 18:02:37 [stomp_manager] INFO  송신 → [/topic/ui/global] action=SESSION_ASSIGNED commandId=60a72068-695f-4d50-9c5d-98bed753caf2
+2026-06-04 18:02:38 [stomp_manager] INFO  수신 ← [/topic/front/events] action=TOUCH_SERVICE
+2026-06-04 18:02:40 [stomp_manager] WARNING  ACK 타임아웃: action=SESSION_ASSIGNED commandId=60a72068-695f-4d50-9c5d-98bed753caf2
+2026-06-04 18:02:40 [kiosk.main] WARNING  SESSION_ASSIGNED ACK 미수신 — 프론트 구독 지연 가능성 있음 (sessionId=5e48505e-c6af-403b-96df-49f1405d9a27). 계속 진행합니다.
+2026-06-04 18:02:40 [mcp_client] INFO  [MCP] voice_guide 호출 — sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?…
+2026-06-04 18:02:40 [kiosk.main] INFO  STOMP TOUCH_SERVICE 수신 — serviceId=c1
+2026-06-04 18:02:40 [mcp_client] INFO  [MCP] start_session 호출 — userType=NORMAL
+2026-06-04 18:02:40 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:40 [kiosk.mcp_server] INFO  [MCP] voice_guide �Ϸ� \u2014 sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 context=SESSION_START userType=NORMAL text=�ȳ��ϼ���. ������ ���͵帱���?��
+2026-06-04 18:02:40 [mcp_client] INFO  [MCP] voice_guide 완료 — guideText=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+2026-06-04 18:02:40 [stomp_manager] INFO  송신 → [/topic/ui/5e48505e-c6af-403b-96df-49f1405d9a27] action=VOICE_GUIDE commandId=10bfd094-059c-49dd-9b3d-4da3c60792db
+2026-06-04 18:02:40 [kiosk.main] INFO  VOICE_GUIDE 전송 — context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+TypeError: %d format: a real number is required, not str
+Call stack:
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 910, in <module>
+    asyncio.run(main())
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 683, in run_forever
+    self._run_once()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 2061, in _run_once
+    handle._run()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 401, in _handle_touch
+    await self._execute_service(service_id)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 463, in _execute_service
+    service_result = await self.mcp.start_service(
+  File "C:\knu_project\mcp-server\mcp_client\mcp_client.py", line 303, in start_service
+    logger.info(
+Message: '[MCP] start_service 호출 — sessionId=%s serviceId=%d userType=%s'
+Arguments: ('5e48505e-c6af-403b-96df-49f1405d9a27', 'resident-copy', 'NORMAL')
+2026-06-04 18:02:40 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:40 [kiosk.mcp_server] INFO  [MCP] start_session �Ϸ� \u2014 sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 userType=NORMAL
+2026-06-04 18:02:40 [mcp_client] INFO  [MCP] start_session 완료 — sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07
+2026-06-04 18:02:40 [session_manager] INFO  세션 생성: fe3b2cb1-29e3-4413-831c-deb420525e07 (유형: NORMAL)
+2026-06-04 18:02:40 [stomp_manager] INFO  송신 → [/topic/ui/global] action=SESSION_ASSIGNED commandId=085a0a15-1f53-4833-a227-f6694c1d8d7c
+2026-06-04 18:02:43 [stomp_manager] WARNING  ACK 타임아웃: action=SESSION_ASSIGNED commandId=085a0a15-1f53-4833-a227-f6694c1d8d7c
+2026-06-04 18:02:43 [kiosk.main] WARNING  SESSION_ASSIGNED ACK 미수신 — 프론트 구독 지연 가능성 있음 (sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07). 계속 진행합니다.
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] voice_guide 호출 — sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?…
+2026-06-04 18:02:43 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:43 [kiosk.main] ERROR  [MCP start_service 응답 오류] MCP 'start_service' 서버 오류: Input validation error: 'resident-copy' is not of type 'integer'
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] end_session 호출 — sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 reason=ERROR
+2026-06-04 18:02:43 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:43 [kiosk.mcp_server] INFO  [MCP] voice_guide �Ϸ� \u2014 sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 context=SESSION_START userType=NORMAL text=�ȳ��ϼ���. ������ ���͵帱���?��
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] voice_guide 완료 — guideText=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+2026-06-04 18:02:43 [stomp_manager] INFO  송신 → [/topic/ui/fe3b2cb1-29e3-4413-831c-deb420525e07] action=VOICE_GUIDE commandId=7c887958-082f-41b1-b0b9-a226ee0e22a0
+2026-06-04 18:02:43 [kiosk.main] INFO  VOICE_GUIDE 전송 — context=SESSION_START userType=NORMAL text=안녕하세요. 무엇을 도와드릴까요?… audioUrl=None
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1151, in emit
+    msg = self.format(record)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 999, in format
+    return fmt.format(record)
+           ~~~~~~~~~~^^^^^^^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 712, in format
+    record.message = record.getMessage()
+                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 400, in getMessage
+    msg = msg % self.args
+          ~~~~^~~~~~~~~~~
+TypeError: %d format: a real number is required, not str
+Call stack:
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 910, in <module>
+    asyncio.run(main())
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 712, in run_until_complete
+    self.run_forever()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 683, in run_forever
+    self._run_once()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 2061, in _run_once
+    handle._run()
+  File "C:\Users\rjsek\AppData\Local\Programs\Python\Python313\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 401, in _handle_touch
+    await self._execute_service(service_id)
+  File "C:\knu_project\mcp-server\mcp_client\main.py", line 463, in _execute_service
+    service_result = await self.mcp.start_service(
+  File "C:\knu_project\mcp-server\mcp_client\mcp_client.py", line 303, in start_service
+    logger.info(
+Message: '[MCP] start_service 호출 — sessionId=%s serviceId=%d userType=%s'
+Arguments: ('fe3b2cb1-29e3-4413-831c-deb420525e07', 'c1', 'NORMAL')
+2026-06-04 18:02:43 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:43 [kiosk.mcp_server] INFO  [MCP] end_session �Ϸ� \u2014 sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 reason=ERROR
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] end_session 완료 — sessionId=5e48505e-c6af-403b-96df-49f1405d9a27 status=CLOSED
+2026-06-04 18:02:43 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:43 [kiosk.main] ERROR  [MCP start_service 응답 오류] MCP 'start_service' 서버 오류: Input validation error: 'c1' is not of type 'integer'
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] end_session 호출 — sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 reason=ERROR
+2026-06-04 18:02:43 [mcp.server.lowlevel.server] INFO  Processing request of type CallToolRequest
+2026-06-04 18:02:43 [kiosk.mcp_server] INFO  [MCP] end_session �Ϸ� \u2014 sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 reason=ERROR
+2026-06-04 18:02:43 [mcp_client] INFO  [MCP] end_session 완료 — sessionId=fe3b2cb1-29e3-4413-831c-deb420525e07 status=CLOSED
+2026-06-04 18:02:48 [stomp_manager] WARNING  WebSocket 연결 끊김 — 자동 재연결 시도: Connection timed out
+2026-06-04 18:02:48 [stomp_manager] INFO  WebSocket 재연결 시도 1/10 (2s 후)
+2026-06-04 18:02:50 [stomp_manager] INFO  WebSocket 연결 시도: ws://localhost:8080/ws
+2026-06-04 18:02:50 [stomp_manager] INFO  WebSocket/STOMP 연결 성공
+2026-06-04 18:02:50 [stomp_manager] INFO  구독 등록: /topic/front/events
+2026-06-04 18:02:50 [stomp_manager] INFO  구독 등록: /topic/front/ack
+2026-06-04 18:02:52 [session_manager] INFO  세션 매니저 종료
