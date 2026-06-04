@@ -243,7 +243,7 @@ class KioskMainController:
         self.ui.register_handler("VOICE_INPUT",      self._on_voice_input)
         self.ui.register_handler("STEP_CHANGE",      self._on_step_change)
         self.sessions.set_timeout_callback(self._on_session_timeout)
-        self.ui.register_handler("TOUCH_SERVICE", self._on_touch_service)
+
     # ── 생명주기 ────────────────────────────────
 
     async def start(self):
@@ -781,21 +781,6 @@ class KioskMainController:
         if session_id:
             self.sessions.touch(session_id)
             logger.info("사용자 활동 수신 (세션: %s)", session_id)
-
-    def _on_touch_service(self, payload: dict):
-        service_id = payload.get("data", {}).get("serviceId")
-        if not service_id:
-            logger.warning("TOUCH_SERVICE payload에 serviceId 없음 — 무시: %s", payload)
-            return
-        logger.info("STOMP TOUCH_SERVICE 수신 — serviceId=%s", service_id)
-        if self._loop and not self._loop.is_closed():
-            self._loop.call_soon_threadsafe(
-                lambda: self._loop.create_task(
-                    self._handle_touch(service_id)
-                )
-            )
-        else:
-            logger.error("TOUCH_SERVICE 수신 시 asyncio 루프 없음 — 처리 불가")
 
     def _on_service_complete(self, payload: dict):
         session_id = payload.get("data", {}).get("sessionId")
