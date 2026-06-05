@@ -141,6 +141,8 @@ const NEXT_SCREEN_BY_SCREEN = {
   [STEP_TRANSFER_SERVICE]: STEP_TRANSFER_CONFIRM,
 };
 
+
+
 function loadInitialAccessibility() {
   // 새로고침하면 항상 기본 모드에서 시작한다.
   // 접근성 모드는 현재 실행 중에만 적용하고 localStorage에 저장하지 않는다.
@@ -172,6 +174,7 @@ export default function App() {
   const shouldListenRef = useRef(false);
   const speechUnlockedRef = useRef(false);
   const preserveVoicePanelTextRef = useRef(false);
+  
 
   const [voicePanelVisible, setVoicePanelVisible] = useState(false);
   const [voiceUi, setVoiceUi] = useState({
@@ -653,6 +656,9 @@ export default function App() {
     return played;
   }, [speakGuide, startVoiceRecognition, stopVoiceRecognition]);
 
+
+  
+
   const turnOffVoiceMode = useCallback(async () => {
     stopVoiceRecognition();
     setVoicePanelVisible(false);
@@ -859,6 +865,9 @@ export default function App() {
                 // 이 작은 패널은 STT 상태/인식 결과 표시용이므로 guideText/visible을 건드리지 않는다.
                 if (guideText) {
                   await playVoiceGuide(guideText, guideLang);
+                  // autoAdvance VOICE_GUIDE가 이미 안내를 읽은 경우,
+                  // 바로 이어지는 화면 전환 기본 안내가 겹쳐서 두 번 재생되지 않게 한다.
+            
                 } else {
                   console.warn('[voice-guide skipped] VOICE_GUIDE text 없음:', message);
                 }
@@ -937,10 +946,10 @@ export default function App() {
     bootstrap();
 
     return () => {
-      mounted = false;
-      clearSubmitResetTimer();
-      stopVoiceRecognition();
-      disconnectStomp();
+    mounted = false;
+    clearSubmitResetTimer();
+    stopVoiceRecognition();
+    disconnectStomp();
     };
   }, [advanceAutoFilledStep, applyPrefilledValue, getScreenFromStepKey, playVoiceGuide, safeSendFrontEvent, safeSendStepChange, stopVoiceRecognition]);
 
@@ -1357,66 +1366,34 @@ export default function App() {
   };
 
   const handleSubmit = async () => {
-    const payload = {
-      sessionId,
-      serviceId: form.selectedServiceId,
-      serviceName: confirmSummary.serviceName,
-      residentRegistrationNumber: `${form.residentFront}-${form.residentBack}`,
-      issueType: form.issueType,
-      selectedOptions: form.selectedHistoryOptions,
-      copyCount: Number(form.copyCount),
-      feePerCopy: FEE_PER_COPY,
-      totalFee,
-    };
+  const activeSessionId = sessionId || sessionIdRef.current || FALLBACK_STEP_SESSION_ID;
 
-    const activeSessionId = sessionId || sessionIdRef.current || FALLBACK_STEP_SESSION_ID;
+  // 제출 버튼에서는 STEP_CHANGE를 다시 보내지 않는다.
+  // 이미 확인 화면에 들어올 때 STEP_CONFIRM은 전송됐기 때문에,
+  // 여기서 또 보내면 MCP가 "입력하신 내용을 확인해 주세요" 안내를 다시 생성한다.
+  await safeSendFrontEvent('SERVICE_COMPLETE', {
+    sessionId: activeSessionId,
+    serviceId: form.selectedServiceId,
+    serviceName: confirmSummary.serviceName,
+  });
 
-    await safeSendStepChange(STEP_CONFIRM, activeSessionId);
-    await safeSendFrontEvent('SERVICE_COMPLETE', {
-      sessionId: activeSessionId,
-      serviceId: form.selectedServiceId,
-      serviceName: confirmSummary.serviceName,
-    });
-    setStatusMessage('서비스 완료 이벤트를 전송했습니다. 잠시 후 처음 화면으로 이동합니다.');
-  };
+  setStatusMessage('서비스 완료 이벤트를 전송했습니다.');
+};
 
   const handleTransferSubmit = async () => {
-    const payload = {
-      sessionId,
-      serviceId: form.selectedServiceId || 'p1',
-      serviceName: form.selectedServiceLabel || '전입신고',
-      applicantName: form.transfer.name,
-      residentRegistrationNumber: `${form.transfer.residentFront}-${form.transfer.residentBack}`,
-      phoneNumber: `${form.transfer.phone1}-${form.transfer.phone2}-${form.transfer.phone3}`,
-      reason: form.transfer.reason,
-      previousAddress: {
-        sido: form.transfer.prevSido,
-        sigungu: form.transfer.prevSigungu,
-        address: form.transfer.prevAddress,
-        adminCenter: form.transfer.prevAdminCenter,
-      },
-      movingMembers: form.transfer.movingMembers,
-      currentAddress: {
-        baseAddress: form.transfer.currentBaseAddress,
-        buildingType: form.transfer.buildingType,
-        buildingMainNo: form.transfer.buildingMainNo,
-        buildingSubNo: form.transfer.buildingSubNo,
-        detailAddress: form.transfer.detailAddress,
-      },
-      householdType: form.transfer.householdType,
-      extraServices: form.transfer.extraServices,
-    };
+  const activeSessionId = sessionId || sessionIdRef.current || FALLBACK_STEP_SESSION_ID;
 
-    const activeSessionId = sessionId || sessionIdRef.current || FALLBACK_STEP_SESSION_ID;
+  // 전입신고 제출 버튼에서도 STEP_CHANGE를 다시 보내지 않는다.
+  // STEP_TRANSFER_CONFIRM은 확인 화면에 진입할 때만 보내고,
+  // 제출 시점에는 SERVICE_COMPLETE만 보내야 한다.
+  await safeSendFrontEvent('SERVICE_COMPLETE', {
+    sessionId: activeSessionId,
+    serviceId: form.selectedServiceId || 'p1',
+    serviceName: form.selectedServiceLabel || '전입신고',
+  });
 
-    await safeSendStepChange(STEP_TRANSFER_CONFIRM, activeSessionId);
-    await safeSendFrontEvent('SERVICE_COMPLETE', {
-      sessionId: activeSessionId,
-      serviceId: form.selectedServiceId || 'p1',
-      serviceName: form.selectedServiceLabel || '전입신고',
-    });
-    setStatusMessage('서비스 완료 이벤트를 전송했습니다. 잠시 후 처음 화면으로 이동합니다.');
-  };
+  setStatusMessage('서비스 완료 이벤트를 전송했습니다. MCP의 종료 명령을 기다립니다.');
+};
 
   const handleVoiceMicClick = () => {
     if (!accessibility.voiceMode) return;
