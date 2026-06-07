@@ -41,13 +41,28 @@ MCP_MAX_RETRIES = 2
 MCP_RETRY_DELAY_SEC = 1
 
 # 사용자 유형별 자동 UI 설정 데이터
+#
+# 변경 이력
+# ─────────────────────────────────────────────────────────
+# - ELDERLY: highContrast True → False 로 분리
+#   · ELDERLY = 큰 글씨 + 심플 모드 전용 (고대비 미포함)
+# - HIGH_CONTRAST 신규 추가
+#   · 고대비 전용 모드: highContrast True, 나머지 NORMAL 값 유지
+# ─────────────────────────────────────────────────────────
 USER_CONFIGS = {
     "ELDERLY": {
         "largeFont": True,
-        "highContrast": True,
+        "highContrast": False,      # 고대비는 HIGH_CONTRAST 타입으로 분리
         "simpleMode": True,
         "lowScreenMode": False,
         "fontSize": "24px"
+    },
+    "HIGH_CONTRAST": {
+        "largeFont": False,
+        "highContrast": True,       # 고대비 전용
+        "simpleMode": False,
+        "lowScreenMode": False,
+        "fontSize": "16px"
     },
     "WHEELCHAIR": {
         "largeFont": False,

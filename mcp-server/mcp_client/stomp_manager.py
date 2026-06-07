@@ -52,6 +52,8 @@ class UIController:
         self._ws_lock = threading.Lock()
         self._ack_lock = threading.Lock()
         self._token_lock = threading.Lock()
+        self._recv_lock = threading.Lock()     # _recv_buffer 단독 접근 보장
+        self._connect_lock = threading.Lock()  # _do_connect 재진입 방지
 
         self.ws: websocket.WebSocket | None = None
         self._receiver_thread: threading.Thread | None = None
@@ -59,6 +61,7 @@ class UIController:
 
         self._recv_buffer = ""
         self._nav_token = 0
+        self._receiver_id = 0  # 수신 스레드 세대 번호 — 구 스레드 메시지 처리 차단용
 
         self._pending_acks: dict[str, PendingAck] = {}
         self._last_send_time = 0.0
@@ -83,12 +86,25 @@ class UIController:
         self._do_connect()
 
     def _do_connect(self):
+        # 동시에 두 번 진입하면 수신 스레드가 2개 생성되므로 Lock으로 직렬화
+        if not self._connect_lock.acquire(blocking=False):
+            logger.info("_do_connect 이미 진행 중 — 중복 진입 차단")
+            return
+        try:
+            self._do_connect_inner()
+        finally:
+            self._connect_lock.release()
+
+    def _do_connect_inner(self):
         try:
             logger.info("WebSocket 연결 시도: %s", self._ws_url)
             new_ws = websocket.create_connection(self._ws_url, timeout=10)
 
-            with self._ws_lock:
-                self.ws = new_ws
+            # 새 소켓 교체 + 버퍼 초기화를 원자적으로 수행
+            # _recv_lock 을 먼저 잡아 구 수신 스레드가 버퍼를 읽는 도중에 초기화되지 않도록 보호
+            with self._recv_lock:
+                with self._ws_lock:
+                    self.ws = new_ws
                 self._recv_buffer = ""
 
             self._send_frame(
@@ -112,13 +128,24 @@ class UIController:
             self._cleanup_stale_acks()
             self._start_heartbeat_loop()
 
-            if self._receiver_thread is None or not self._receiver_thread.is_alive():
-                self._receiver_thread = threading.Thread(
-                    target=self._receive_loop,
-                    name="stomp-receiver",
-                    daemon=True,
-                )
-                self._receiver_thread.start()
+            # 세대 번호를 증가시켜 구 수신 스레드가 처리하는 메시지를 무시하게 만든다.
+            # join(timeout) 만으로는 구 스레드 종료를 보장할 수 없으므로,
+            # 세대 번호 불일치 시 _handle_message 에서 메시지를 즉시 버린다.
+            with self._recv_lock:
+                self._receiver_id += 1
+                my_id = self._receiver_id
+
+            # 기존 수신 스레드가 살아있으면 종료될 때까지 잠시 대기 후 새로 시작
+            if self._receiver_thread is not None and self._receiver_thread.is_alive():
+                self._receiver_thread.join(timeout=2.0)
+
+            self._receiver_thread = threading.Thread(
+                target=self._receive_loop,
+                args=(my_id,),
+                name=f"stomp-receiver-{my_id}",
+                daemon=True,
+            )
+            self._receiver_thread.start()
 
         except Exception as e:
             logger.error("WebSocket/STOMP 연결 실패: %s", e)
@@ -133,30 +160,35 @@ class UIController:
         def _reconnect_loop():
             delay = max(1, self._reconnect_delay)
 
-            for attempt in range(1, self._max_reconnect_tries + 1):
-                if self._stopping or self._connected:
-                    break
-
-                logger.info(
-                    "WebSocket 재연결 시도 %d/%d (%ds 후)",
-                    attempt,
-                    self._max_reconnect_tries,
-                    delay,
-                )
-                time.sleep(delay)
-
-                try:
-                    self._close_socket()
-                    self._do_connect()
-                    if self._connected:
+            try:
+                for attempt in range(1, self._max_reconnect_tries + 1):
+                    if self._stopping or self._connected:
                         break
-                except Exception as e:
-                    logger.warning("재연결 실패: %s", e)
-                    delay = min(delay * 2, 30)
-            else:
-                logger.critical("WebSocket 재연결 최대 시도 초과 — 수동 점검 필요")
 
-            self._reconnecting = False
+                    logger.info(
+                        "WebSocket 재연결 시도 %d/%d (%ds 후)",
+                        attempt,
+                        self._max_reconnect_tries,
+                        delay,
+                    )
+                    time.sleep(delay)
+
+                    if self._stopping or self._connected:
+                        break
+
+                    try:
+                        self._close_socket()
+                        self._do_connect()
+                        if self._connected:
+                            break
+                    except Exception as e:
+                        logger.warning("재연결 실패: %s", e)
+                        delay = min(delay * 2, 30)
+                else:
+                    logger.critical("WebSocket 재연결 최대 시도 초과 — 수동 점검 필요")
+            finally:
+                # 성공·실패·예외 어느 경로로 끝나도 반드시 해제
+                self._reconnecting = False
 
         threading.Thread(target=_reconnect_loop, name="stomp-reconnect", daemon=True).start()
 
@@ -244,9 +276,10 @@ class UIController:
 
     def _recv_frame_blocking(self) -> str:
         while True:
-            if "\x00" in self._recv_buffer:
-                frame, self._recv_buffer = self._recv_buffer.split("\x00", 1)
-                return frame
+            with self._recv_lock:
+                if "\x00" in self._recv_buffer:
+                    frame, self._recv_buffer = self._recv_buffer.split("\x00", 1)
+                    return frame
 
             ws = self.ws
             if ws is None:
@@ -260,7 +293,8 @@ class UIController:
             if data.strip() == "":
                 return "\n"
 
-            self._recv_buffer += data
+            with self._recv_lock:
+                self._recv_buffer += data
 
     @staticmethod
     def _parse_frame(raw_frame: str):
@@ -280,13 +314,24 @@ class UIController:
 
         return command, headers, body
 
-    def _receive_loop(self):
+    def _receive_loop(self, my_receiver_id: int):
         try:
             while not self._stopping:
                 raw = self._recv_frame_blocking()
 
                 if raw == "\n":
                     continue
+
+                # 세대 번호 확인 — 재연결로 신 스레드가 생성된 후에도 구 스레드가
+                # 남아있을 수 있다. 구 스레드의 메시지 처리를 여기서 차단한다.
+                with self._recv_lock:
+                    current_id = self._receiver_id
+                if my_receiver_id != current_id:
+                    logger.info(
+                        "구 수신 스레드(id=%d) 메시지 처리 차단 — 현재 세대: %d",
+                        my_receiver_id, current_id,
+                    )
+                    return
 
                 command, headers, body = self._parse_frame(raw)
 
@@ -315,9 +360,10 @@ class UIController:
     # 구독 / 핸들러
     # ─────────────────────────────────────────
     def _subscribe_all(self):
+        # 재연결 시 동일 sub-id로 중복 구독되지 않도록 uuid 사용
         subs = [
-            (self._sub_front_events, "sub-events"),
-            (self._sub_front_ack, "sub-ack"),
+            (self._sub_front_events, f"sub-events-{uuid.uuid4()}"),
+            (self._sub_front_ack,    f"sub-ack-{uuid.uuid4()}"),
         ]
         for dest, sub_id in subs:
             try:
@@ -329,7 +375,7 @@ class UIController:
                         "ack": "auto",
                     },
                 )
-                logger.info("구독 등록: %s", dest)
+                logger.info("구독 등록: %s (sub-id: %s)", dest, sub_id)
             except Exception as e:
                 logger.error("구독 실패 [%s]: %s", dest, e)
 
@@ -338,24 +384,42 @@ class UIController:
         logger.info("핸들러 등록: action='%s'", action)
 
     def _handle_message(self, destination: str, payload: dict):
+        """
+        수신 메시지를 등록된 핸들러로 전달한다.
+
+        [BUG-FIX] 핸들러 중복 실행 근본 수정
+        ─────────────────────────────────────────────────────────
+        기존 구조의 문제:
+          1) _handle_message 에서 handler 를 조회한 뒤
+             _dispatch_message 를 호출한다.
+          2) _dispatch_message 도 handler 를 다시 조회·실행한다.
+             → handler 조회가 2회 발생 (잠재적 이중 실행)
+
+          3) 동기 핸들러(_on_step_change 등)를 call_soon_threadsafe
+             로 감싸 이벤트 루프에 스케줄링한다.
+          4) 루프 안에서 _run_sync 가 실행되면 handler 내부에서
+             call_soon_threadsafe → create_task 를 또 호출한다.
+             이벤트 루프 스레드에서 call_soon_threadsafe 를 호출하면
+             큐에 콜백이 중복 등록되어 코루틴이 2회 이상 생성된다.
+             → 안내 문구 2~5회 반복 재생
+
+        수정:
+          - _handle_message 에서 직접 처리, _dispatch_message 제거
+          - 동기 핸들러: 수신 스레드(_receive_loop)에서 직접 호출
+            · 수신 스레드는 이벤트 루프 스레드가 아니므로
+              핸들러 내부의 call_soon_threadsafe 가 1회만 큐에 등록됨
+          - 코루틴 핸들러: 기존과 동일하게 call_soon_threadsafe 로 스케줄링
+        ─────────────────────────────────────────────────────────
+        """
         action = payload.get("action")
 
         if action == "UI_ACK":
             self._resolve_ack(payload)
-            # 의도적으로 return하지 않음.
-            # UI_ACK는 내부 ACK 해소 후에도 외부 로깅/모니터링 핸들러로 전달 가능.
+            # UI_ACK 는 ACK 해소 후에도 외부 핸들러로 전달 가능하도록 return 하지 않음
 
         handler = self._handlers.get(action)
         if not handler:
             logger.debug("미등록 action 수신 무시: %s", action)
-            return
-
-        self._dispatch_message(destination, payload)
-
-    def _dispatch_message(self, destination: str, payload: dict):
-        action = payload.get("action")
-        handler = self._handlers.get(action)
-        if not handler:
             return
 
         if self._loop is None or self._loop.is_closed():
@@ -367,16 +431,18 @@ class UIController:
             return
 
         if asyncio.iscoroutinefunction(handler):
+            # 코루틴 핸들러: 루프에 태스크로 스케줄링
             def _schedule_coro():
                 self._loop.create_task(self._safe_async_handler(action, handler, payload))
             self._loop.call_soon_threadsafe(_schedule_coro)
         else:
-            def _run_sync():
-                try:
-                    handler(payload)
-                except Exception as e:
-                    logger.error("핸들러 오류 [%s]: %s", action, e)
-            self._loop.call_soon_threadsafe(_run_sync)
+            # 동기 핸들러: 수신 스레드에서 직접 호출
+            # 이 시점은 _receive_loop(수신 스레드, 비-루프 스레드)이므로
+            # 핸들러 내부의 call_soon_threadsafe 가 루프 큐에 정확히 1회 등록됨
+            try:
+                handler(payload)
+            except Exception as e:
+                logger.error("핸들러 오류 [%s]: %s", action, e)
 
     @staticmethod
     async def _safe_async_handler(action: str, handler, payload: dict):

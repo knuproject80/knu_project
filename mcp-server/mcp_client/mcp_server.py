@@ -43,10 +43,17 @@ USER_SETTINGS: dict[str, dict] = {
     },
     "ELDERLY": {
         "largeFont":     True,
-        "highContrast":  True,
+        "highContrast":  False,     # 고대비는 HIGH_CONTRAST 타입으로 분리
         "simpleMode":    True,
         "lowScreenMode": False,
         "fontSize":      "24px",
+    },
+    "HIGH_CONTRAST": {
+        "largeFont":     False,
+        "highContrast":  True,      # 고대비 전용
+        "simpleMode":    False,
+        "lowScreenMode": False,
+        "fontSize":      "16px",
     },
     "WHEELCHAIR": {
         "largeFont":     False,
@@ -90,7 +97,7 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "userType": {
                         "type": "string",
-                        "enum": ["NORMAL", "ELDERLY", "WHEELCHAIR"],
+                        "enum": ["NORMAL", "ELDERLY", "HIGH_CONTRAST", "WHEELCHAIR"],
                         "description": "사용자 유형",
                     },
                 },
@@ -114,7 +121,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "userType": {
                         "type": "string",
-                        "enum": ["NORMAL", "ELDERLY", "WHEELCHAIR"],
+                        "enum": ["NORMAL", "ELDERLY", "HIGH_CONTRAST", "WHEELCHAIR"],
                     },
                 },
                 "required": ["sessionId", "serviceId", "userType"],
@@ -159,7 +166,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "userType": {
                         "type": "string",
-                        "enum": ["NORMAL", "ELDERLY", "WHEELCHAIR"],
+                        "enum": ["NORMAL", "ELDERLY", "HIGH_CONTRAST", "WHEELCHAIR"],
                     },
                     "context": {
                         "type": "string",
