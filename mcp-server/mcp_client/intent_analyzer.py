@@ -131,11 +131,18 @@ class IntentAnalyzer:
             explicit_normal = False
             logger.debug("userType AI 응답 우선 사용: %s", user_type)
         else:
-            ai_str_values = " ".join(
-                str(v) for v in ai_raw_response.values() if isinstance(v, str)
-            )
-            combined_text = f"{original_text} {ai_str_values}".strip()
-            keyword_type, explicit_normal = self._resolve_user_type(combined_text)
+            # 변경 이력
+            # ─────────────────────────────────────────────────────────
+            # - AI 응답 문자열(answer 등)을 스캔 대상에서 제외
+            #   · 기존: combined_text = original_text + AI 응답 전체 문자열
+            #   · 변경: original_text 만 스캔
+            #   · 이유: AI answer에 포함된 일상 단어("기본정보", "원래대로" 등)가
+            #     NORMAL 키워드("기본", "원래")로 오탐되어 서비스 진입 전에
+            #     explicit_normal=True → _change_mode("NORMAL") → return 되는 버그
+            #     ex) "전입신고" 발화 → answer "기본정보를 입력해 주세요" →
+            #         "기본" 매칭 → explicit_normal=True → 전입신고 페이지 미진입
+            # ─────────────────────────────────────────────────────────
+            keyword_type, explicit_normal = self._resolve_user_type(original_text)
             if keyword_type != "NORMAL":
                 logger.debug(
                     "AI userType=%s 이나 키워드 스캔으로 %s 감지 → 교정",
