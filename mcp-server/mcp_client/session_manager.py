@@ -41,6 +41,7 @@ class Session:
     last_activity:        float              = field(default_factory=time.time)
     conversation_history: list               = field(default_factory=list)
     prefilled:            dict               = field(default_factory=dict)   # v6.0 추가
+    last_step:            str                = ""                            # [추가] 모드 변경 후 기존 단계 음성 복구를 위해 최종 단계 저장
 
     def touch(self):
         """활동 시각 갱신"""
@@ -205,13 +206,6 @@ class SessionManager:
 
         VOICE_INPUT → AI /chat 응답 수신 직후 _handle_voice에서 호출한다.
         entities의 null 값은 저장하지 않아 is_step_prefilled가 False를 반환하도록 한다.
-
-        Parameters
-        ----------
-        session_id : str
-        entities : dict
-            예: {"count": 1, "paymentMethod": "CASH", "purpose": None, "scope": None}
-            null/None 값은 필터링하여 저장하지 않는다.
         """
         if not isinstance(entities, dict):
             logger.warning(
@@ -236,20 +230,6 @@ class SessionManager:
     def is_step_prefilled(self, session_id: str, step: str) -> bool:
         """
         해당 step에 대응하는 entity가 이미 채워졌는지 확인한다. (v6.0)
-
-        _STEP_TO_ENTITY 매핑에 없는 step은 항상 False를 반환한다.
-        (전입신고 단계처럼 prefilled 대상이 아닌 step은 스킵하지 않는다.)
-
-        Parameters
-        ----------
-        session_id : str
-        step : str
-            예: "CERTIFICATE_SELECT_COUNT"
-
-        Returns
-        -------
-        bool
-            True이면 main.py에서 AI 호출 없이 autoAdvance 처리한다.
         """
         entity_key = self._STEP_TO_ENTITY.get(step)
         if entity_key is None:
@@ -264,19 +244,6 @@ class SessionManager:
     def get_prefilled_value(self, session_id: str, step: str):
         """
         해당 step의 prefilled 값을 반환한다. (v6.0)
-
-        is_step_prefilled() 확인 후 호출하는 것을 권장한다.
-        매핑이 없거나 세션이 없으면 None을 반환한다.
-
-        Parameters
-        ----------
-        session_id : str
-        step : str
-
-        Returns
-        -------
-        Any | None
-            저장된 값 (예: 1, "CASH") 또는 None
         """
         entity_key = self._STEP_TO_ENTITY.get(step)
         if entity_key is None:
@@ -291,15 +258,6 @@ class SessionManager:
     def clear_prefilled_field(self, session_id: str, step: str) -> None:
         """
         특정 step의 prefilled 값을 초기화한다. (v6.0)
-
-        사용자가 자동입력된 값을 재발화로 수정하려 할 때 호출한다.
-        예: "매수 변경해줘" → CERTIFICATE_SELECT_COUNT prefilled 초기화
-
-        Parameters
-        ----------
-        session_id : str
-        step : str
-            초기화할 step 키
         """
         entity_key = self._STEP_TO_ENTITY.get(step)
         if entity_key is None:
