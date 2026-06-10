@@ -1,0 +1,4 @@
+mcp
+websocket-client
+requests
+python-dotenv
