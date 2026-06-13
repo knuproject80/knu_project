@@ -558,7 +558,13 @@ class UIController:
             "commandId": command_id,
             "data": data,
         }
-        dest = f"{self._pub_ui_prefix}/{session_id}" if session_id else f"{self._pub_ui_prefix}/global"
+        # [구독 레이스 해결] 세션별 토픽(/topic/ui/{sessionId})은 프론트가
+        # SESSION_ASSIGNED 수신 후에야 구독하므로, MOVE_PAGE 등이 구독 등록 전에
+        # 도착하면 SimpleBroker 특성상 유실된다("됐다 안 됐다" 현상).
+        # 프론트는 시작부터 /topic/ui/global 을 구독하고, MOVE_PAGE/VOICE_GUIDE
+        # 핸들러가 이미 data.sessionId 로 라우팅하므로 항상 global 로 보낸다.
+        # sessionId 는 위에서 data["sessionId"] 에 채워지므로 식별 정보는 유지된다.
+        dest = f"{self._pub_ui_prefix}/global"
         body = json.dumps(message, ensure_ascii=False)
 
         pending: PendingAck | None = None
