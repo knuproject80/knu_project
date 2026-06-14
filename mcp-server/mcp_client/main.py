@@ -386,8 +386,8 @@ class KioskMainController:
                 await self._resume_active_session_guide()
                 return
 
-        if not ai_res or ai_res.get("confidence", 0) < 0.6:
-            logger.info("AI 분석 신뢰도 부족 — 요청 무시")
+        if not ai_res:
+            logger.info("AI 분석 결과 없음 — 요청 무시")
             return
 
         ai_answer = ai_res.get("answer", "")
@@ -401,15 +401,27 @@ class KioskMainController:
 
         # ── 서비스 진입 처리 ────────────────────────────────────────────
         # 모드 변경 의도는 위(Step 0 / AI pre-check)에서 모두 처리 후 return 되었으므로
-        # 여기까지 도달한 경우는 반드시 서비스 진입 의도다.
+        # 여기까지 도달한 경우는 '서비스 진입' 또는 '미지원/범위 외 안내' 둘 중 하나다.
 
+        # serviceId가 특정되지 않은 응답(미지원 서비스/범위 밖 발화)은
+        # confidence와 무관하게 안내를 내보낸다.
+        # AI 서버는 미지원 서비스(여권/운전면허 등)에 의도적으로 낮은 confidence(0.2~0.55)를
+        # 부여하므로, 신뢰도 컷을 먼저 적용하면 이 안내가 묵살되어 프론트가 무반응이 된다.
         service_id = ai_res.get("serviceId")
         if service_id is None:
-            logger.info("AI 응답에 serviceId 없음 — 미지원 서비스 안내")
-            await self._send_voice_guide(
-                session_id="global", context="UNSUPPORTED_SERVICE",
-                user_type=self.current_user_type, override_text=ai_answer,
-            )
+            if ai_answer.strip():
+                logger.info("AI 응답에 serviceId 없음 — 미지원/범위 외 서비스 안내")
+                await self._send_voice_guide(
+                    session_id="global", context="UNSUPPORTED_SERVICE",
+                    user_type=self.current_user_type, override_text=ai_answer,
+                )
+            else:
+                logger.info("serviceId 없음 + 안내 문구 없음 — 요청 무시")
+            return
+
+        # 여기서부터는 특정 서비스 진입 의도다. 이때만 신뢰도 컷을 적용한다.
+        if ai_res.get("confidence", 0) < 0.6:
+            logger.info("서비스 진입 신뢰도 부족 — 요청 무시")
             return
 
         active_ids = self.sessions.get_active_session_ids()
