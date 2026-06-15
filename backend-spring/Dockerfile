@@ -25,6 +25,7 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # ─────────────────────────────────────────────────────────
 ENV JAVA_OPTS="-Xms128m -Xmx512m \
   -XX:MaxMetaspaceSize=128m \
+  -XX:MaxDirectMemorySize=128m \
   -XX:ReservedCodeCacheSize=96m \
   -Xss512k \
   -XX:+UseSerialGC \
