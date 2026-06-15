@@ -7,6 +7,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 /**
  * WebSocket / STOMP 설정.
@@ -53,6 +54,27 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // 순수 WebSocket (MCP Client stomp_manager 등 non-SockJS 클라이언트용)
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
+    }
+
+    /**
+     * WebSocket transport 제한 — native/off-heap 메모리 누수 방지.
+     *
+     * 느리거나 응답 없는(좀비) 연결이 서버 송신 버퍼를 무한정 쌓는 것을 막는다.
+     * 한도를 넘는 세션은 Spring 이 강제로 닫아 버퍼를 회수하므로,
+     * 며칠에 걸쳐 RSS 가 서서히 차오르는 현상을 차단한다.
+     *
+     *  - messageSizeLimit   : 수신 메시지 1건의 최대 크기 (64KB)
+     *                          이 앱의 메시지는 작은 JSON 이라 충분.
+     *  - sendBufferSizeLimit: 세션당 송신 대기 버퍼 상한 (512KB)
+     *                          느린 소비자가 이 한도를 넘으면 세션을 닫는다.
+     *  - sendTimeLimit      : 메시지 1건 전송 제한 시간 (20초)
+     *                          이 시간 안에 못 보내면(죽은 연결) 세션을 닫는다.
+     */
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        registration.setMessageSizeLimit(64 * 1024);        // 64 KB
+        registration.setSendBufferSizeLimit(512 * 1024);    // 512 KB
+        registration.setSendTimeLimit(20 * 1000);           // 20 초
     }
 
     /**
